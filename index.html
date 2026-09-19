@@ -1,0 +1,3455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>거장의 렌즈 — 5대 투자 대가 통합 스크리너</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
+  <script src="screener_data.js"></script>
+  <script src="cycle_data.js"></script>
+
+  <style>
+    :root {
+      --bg-base: #0B0E14;
+      --bg-surface: #141923;
+      --bg-surface-elevated: #1B2230;
+      --bg-surface-hover: #222B3D;
+      --border-subtle: #252F42;
+      --border-strong: #384661;
+      
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      
+      --accent-gold: #F59E0B;
+      --accent-gold-glow: rgba(245, 158, 11, 0.18);
+      --accent-emerald: #10B981;
+      --accent-emerald-glow: rgba(16, 185, 129, 0.18);
+      --accent-blue: #3B82F6;
+      --accent-blue-glow: rgba(59, 130, 246, 0.18);
+      --accent-purple: #8B5CF6;
+      --accent-purple-glow: rgba(139, 92, 246, 0.18);
+      --accent-amber: #EA580C;
+      --accent-red: #EF4444;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* ── 앱 레이아웃 (좌측 사이드바 + 우측 메인) ── */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* 좌측 사이드바 */
+    .sidebar {
+      width: 290px;
+      min-width: 290px;
+      background: #0D121F;
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: linear-gradient(180deg, #131A2B 0%, #0D121F 100%);
+    }
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-box h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #FFF;
+      line-height: 1.25;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--accent-gold);
+      font-weight: 700;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 사이드바 네비게이션 */
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      user-select: none;
+    }
+    .nav-item:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+    }
+    .nav-item.active {
+      color: #FFF;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+    .nav-item[data-master="buffett"].active {
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+      border-color: #3B82F6;
+    }
+    .nav-item[data-master="lynch"].active {
+      background: linear-gradient(135deg, #065F46 0%, #059669 100%);
+      border-color: #10B981;
+    }
+    .nav-item[data-master="oil"].active {
+      background: linear-gradient(135deg, #78350F 0%, #D97706 100%);
+      border-color: #F59E0B;
+    }
+    .nav-item[data-master="vip"].active {
+      background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%);
+      border-color: #8B5CF6;
+    }
+    .nav-item[data-master="leader"].active {
+      background: linear-gradient(135deg, #7C2D12 0%, #C2410C 100%);
+      border-color: #EA580C;
+    }
+    .nav-item[data-master="kiyohara"].active {
+      background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
+      border-color: #2DD4BF;
+    }
+    .nav-item[data-master="siegel"].active {
+      background: linear-gradient(135deg, #831843 0%, #BE185D 100%);
+      border-color: #F43F5E;
+    }
+    .nav-item[data-master="minervini"].active {
+      background: linear-gradient(135deg, #BE123C 0%, #E11D48 100%);
+      border-color: #FB7185;
+    }
+    .nav-item[data-master="all"] {
+      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.08);
+      color: #93C5FD;
+      margin-bottom: 4px;
+    }
+    .nav-item[data-master="all"]:hover {
+      background: rgba(59, 130, 246, 0.18);
+      border-color: #60A5FA;
+      color: #FFF;
+    }
+    .nav-item[data-master="all"].active {
+      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
+      border-color: #93C5FD;
+      color: #FFF;
+      font-weight: 800;
+    }
+    .nav-item[data-master="multipass"] {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.08);
+      color: #FCD34D;
+      margin-bottom: 4px;
+    }
+    .nav-item[data-master="multipass"]:hover {
+      background: rgba(245, 158, 11, 0.16);
+      border-color: var(--accent-gold);
+    }
+    .nav-item[data-master="multipass"].active {
+      background: linear-gradient(135deg, #B45309 0%, #F59E0B 100%);
+      border-color: #FCD34D;
+      color: #0F172A;
+      font-weight: 800;
+    }
+
+    .nav-item[data-master="cycle"] {
+      border-color: rgba(14, 165, 233, 0.4);
+      background: rgba(14, 165, 233, 0.08);
+      color: #38BDF8;
+      margin-bottom: 4px;
+    }
+    .nav-item[data-master="cycle"]:hover {
+      background: rgba(14, 165, 233, 0.18);
+      border-color: #38BDF8;
+      color: #FFF;
+    }
+    .nav-item[data-master="cycle"].active {
+      background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
+      border-color: #7DD3FC;
+      color: #FFF;
+      font-weight: 800;
+    }
+    .nav-icon {
+      font-size: 19px;
+      flex-shrink: 0;
+    }
+    .nav-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .nav-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: inherit;
+    }
+    .nav-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nav-item.active .nav-desc {
+      color: rgba(255, 255, 255, 0.82);
+    }
+    .nav-item[data-master="multipass"].active .nav-desc {
+      color: #1E293B;
+      font-weight: 600;
+    }
+
+    .nav-divider {
+      margin: 8px 4px 4px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding-left: 6px;
+    }
+
+    /* 사이드바 푸터 */
+    .sidebar-footer {
+      padding: 14px 14px;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.25);
+    }
+    .sidebar-stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11.5px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-secondary);
+    }
+    .stat-row strong { color: var(--text-primary); }
+
+    /* ── 우측 메인 영역 ────────────────────────── */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      padding: 24px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: var(--bg-base);
+    }
+
+    /* ── 거장 소개 배너 ──────────────────────── */
+    .master-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .master-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--accent-gold);
+    }
+    .banner-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .master-banner-text h2 {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .master-banner-text p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .banner-stats {
+      display: flex;
+      gap: 14px;
+    }
+    .b-stat {
+      background: var(--bg-surface-elevated);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      text-align: center;
+      border: 1px solid var(--border-subtle);
+    }
+    .b-stat .label { font-size: 11px; color: var(--text-muted); }
+    .b-stat .val { font-size: 17px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary); }
+
+    /* ── 거장 판정 기준 가이드 박스 ────────────────── */
+    .verdict-guide-box {
+      width: 100%;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .guide-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.2px;
+    }
+    .guide-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 8px;
+    }
+    .guide-item {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 7px 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11.5px;
+    }
+    .guide-badge {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      line-height: 1.3;
+    }
+    .guide-desc {
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* ── 국가/시장 선택 바 (사이드바) ─────────────────────── */
+    .market-country-bar {
+      margin: 12px 14px 14px;
+      padding: 12px 14px 14px;
+      background: rgba(20, 25, 35, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .country-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #94A3B8;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.2;
+    }
+    .country-label::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 12px;
+      background: var(--accent-gold);
+      border-radius: 2px;
+    }
+    .country-pill-group {
+      display: flex;
+      background: #0B0E14;
+      padding: 3px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      gap: 3px;
+    }
+    .country-pill {
+      flex: 1;
+      padding: 7px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .country-pill:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .country-pill.active {
+      background: var(--accent-gold);
+      color: #0F172A;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    /* ── 다중 거장 커스텀 조합기 스타일 ─────────────────────── */
+    .custom-combo-panel {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    }
+    .combo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .combo-title-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .combo-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #F8FAFC;
+    }
+    .combo-sub {
+      font-size: 12px;
+      color: #94A3B8;
+    }
+    .combo-mode-toggle {
+      display: flex;
+      background: #0F172A;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .combo-mode-btn {
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .combo-mode-btn.active {
+      background: #2563EB;
+      color: #FFFFFF;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    }
+    .combo-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .combo-chip {
+      background: #1E293B;
+      border: 1px solid #334155;
+      color: #CBD5E1;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .combo-chip:hover {
+      background: #283548;
+      border-color: #64748B;
+      color: #F8FAFC;
+    }
+    .combo-chip.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: #10B981;
+      color: #34D399;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+    .combo-chip.active::after {
+      content: " ✓";
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .combo-presets-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+    .presets-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #F59E0B;
+      margin-right: 4px;
+    }
+    .preset-btn {
+      background: #0F172A;
+      border: 1px solid #334155;
+      color: #CBD5E1;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preset-btn:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: #3B82F6;
+      color: #93C5FD;
+    }
+    .preset-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+    .preset-action-btn {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #94A3B8;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .preset-action-btn:hover {
+      background: #334155;
+      color: #F8FAFC;
+      border-color: #64748B;
+    }
+
+    /* ── 필터 및 컨트롤 바 ────────────────────── */
+    .control-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px 10px 36px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent-blue); }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .filter-select {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--accent-blue); }
+    
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      background: var(--bg-surface-elevated);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+    .slider-group span { color: var(--text-muted); }
+    .slider-group strong { color: var(--text-primary); font-family: var(--font-mono); }
+    .slider-group input[type="range"] {
+      width: 90px;
+      accent-color: var(--accent-gold);
+      cursor: pointer;
+    }
+    .btn-reset {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+    }
+
+    /* ── 결과 테이블 ────────────────────────── */
+    .table-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      scrollbar-width: thin;
+      scrollbar-color: #64748B #1B2230;
+      position: relative;
+    }
+    .table-container::-webkit-scrollbar {
+      height: 10px;
+    }
+    .table-container::-webkit-scrollbar-track {
+      background: #1B2230;
+      border-radius: 4px;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+      background: #64748B;
+      border-radius: 4px;
+      border: 2px solid #1B2230;
+    }
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+    table {
+      width: 100%;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #1B2230;
+      padding: 9px 9px;
+      font-weight: 700;
+      font-size: 12px;
+      color: #94A3B8;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s, background 0.15s;
+    }
+    thead th:hover { color: var(--text-primary); background: #222B3D; }
+    thead th.sort-asc::after { content: ' ▲'; font-size: 9px; color: var(--accent-gold); }
+    thead th.sort-desc::after { content: ' ▼'; font-size: 9px; color: var(--accent-gold); }
+    tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    tbody tr:hover {
+      background: var(--bg-surface-hover);
+    }
+    tbody td {
+      padding: 7px 9px;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .cell-name {
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 170px;
+    }
+    .cell-name > span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cell-code {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-base);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .cell-market {
+      font-size: 11px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .market-kospi { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .market-kosdaq { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .market-nyse { background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .market-nasdaq { background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.35); }
+    .market-us { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.35); }
+
+    /* ── 배지 및 태그 ────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .badge-pass { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .badge-wait { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .badge-fail { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+    .badge-a { background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35)); color: #FCD34D; border: 1px solid #F59E0B; }
+    .badge-b { background: rgba(59, 130, 246, 0.2); color: #93C5FD; border: 1px solid #3B82F6; }
+    .badge-c { background: rgba(100, 116, 139, 0.2); color: #94A3B8; border: 1px solid #64748B; }
+    .badge-d { background: rgba(239, 68, 68, 0.15); color: #FCA5A5; }
+    .badge-burn { background: rgba(236, 72, 153, 0.2); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.35); font-size: 11px; }
+
+    /* ── 상세 팝업 모달 ──────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 960px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .modal-title-box h3 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-body {
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* 차트 박스 */
+    .chart-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .chart-header h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-surface-elevated);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+    .chart-tab-btn {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chart-tab-btn:hover {
+      color: var(--text-primary);
+    }
+    .chart-tab-btn.active {
+      background: #2563EB;
+      color: #FFF;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot-bar { width: 10px; height: 10px; background: #10B981; border-radius: 2px; }
+    .dot-line { width: 14px; height: 3px; background: #3B82F6; border-radius: 2px; }
+    .chart-wrapper {
+      height: 280px;
+      position: relative;
+    }
+
+    /* 거장 종합 채점 박스 */
+    .eval-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .eval-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .eval-master {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .eval-verdict {
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .eval-desc {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* 10개년 시계열 테이블 */
+    .series-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .series-table th, .series-table td {
+      padding: 8px 10px;
+      text-align: right;
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+    }
+    .series-table th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    .series-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    /* ── 사이클 레이더 전용 스타일 ────────────────────────── */
+    .cycle-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .cycle-industry-bar {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .cycle-ind-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex: 1;
+      min-width: 170px;
+    }
+    .cycle-ind-btn:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+    .cycle-ind-btn.active {
+      background: var(--bg-surface-elevated);
+      border-color: #38BDF8;
+      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.25);
+      color: #FFF;
+    }
+    .cycle-ind-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+    .cycle-ind-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: inherit;
+    }
+    .cycle-ind-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      line-height: 1.2;
+    }
+
+    .cycle-grid {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 1200px) {
+      .cycle-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cycle-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .cycle-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 14px;
+    }
+    .cycle-card-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cycle-card-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .cycle-chart-wrap {
+      height: 290px;
+      position: relative;
+    }
+
+    .leader-quote-box {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--accent-gold);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-size: 12.5px;
+      color: #FCD34D;
+      line-height: 1.55;
+    }
+
+    .checklist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .checklist-item:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-strong);
+    }
+    .checklist-checkbox {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      accent-color: #10B981;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .checklist-text {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      flex: 1;
+    }
+    .checklist-item.checked {
+      border-color: rgba(16, 185, 129, 0.45);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .checklist-item.checked .checklist-text {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* 서브 선종/세부 토글 바 */
+    .cycle-sub-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      background: var(--bg-surface-elevated);
+      padding: 5px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      width: fit-content;
+    }
+    .cycle-sub-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cycle-sub-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-surface-hover);
+    }
+    .cycle-sub-btn.active {
+      background: #0284C7;
+      color: #FFF;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    /* 사이클주 PER 역발상 판독기 카드 */
+    .cycle-valuation-box {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 13px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .cycle-val-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .cycle-val-label {
+      min-width: 72px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .cycle-val-content {
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .cycle-val-trap {
+      background: rgba(239, 68, 68, 0.08);
+      border-left: 3px solid var(--accent-red);
+      padding: 8px 11px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      color: #FCA5A5;
+      line-height: 1.45;
+    }
+
+    /* 푸터 */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 18px 36px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      background: var(--bg-surface);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── 전체 앱 레이아웃 ──────────────────────── -->
+  <div class="app-layout">
+
+    <!-- ── 좌측 사이드바 ────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-box">
+          <span style="font-size: 24px;">🏆</span>
+          <div>
+            <h1>거장의 렌즈</h1>
+            <div class="brand-sub">
+              <span>8대 거장 글로벌 통합 스크리너</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 국가/시장 선택 탭 (한국 / 미국 / 통합) ── -->
+      <div class="market-country-bar">
+        <span class="country-label">대상 시장 선택</span>
+        <div class="country-pill-group">
+          <button class="country-pill active" data-country="ALL">🌐 전체(통합)</button>
+          <button class="country-pill" data-country="KR">🇰🇷 한국주식</button>
+          <button class="country-pill" data-country="US">🇺🇸 미국주식</button>
+        </div>
+      </div>
+
+      <!-- 거장 네비게이션 -->
+      <nav class="sidebar-nav">
+        <!-- 전종목 자유 탐색기 (NEW) -->
+        <button class="nav-item" data-master="all">
+          <span class="nav-icon">🔍</span>
+          <div class="nav-text">
+            <span class="nav-title">전종목 자유 탐색기</span>
+            <span class="nav-desc">한·미 2,723개 종목 무제한 검색</span>
+          </div>
+        </button>
+
+        <!-- 다중 거장 통과 (최상단 하이라이트) -->
+        <button class="nav-item" data-master="multipass">
+          <span class="nav-icon">🌟</span>
+          <div class="nav-text">
+            <span class="nav-title">다중 거장 통과</span>
+            <span class="nav-desc">8인·7인·6인·5인 통합 교집합</span>
+          </div>
+        </button>
+
+        <!-- 사이클 레이더 (07leader 렌즈) -->
+        <button class="nav-item" data-master="cycle">
+          <span class="nav-icon">🌊</span>
+          <div class="nav-text">
+            <span class="nav-title">사이클 레이더</span>
+            <span class="nav-desc">07leader 업종 바닥 탐지 & 3대 질문</span>
+          </div>
+        </button>
+
+        <div class="nav-divider">8대 거장 렌즈</div>
+
+        <button class="nav-item active" data-master="buffett">
+          <span class="nav-icon">🎩</span>
+          <div class="nav-text">
+            <span class="nav-title">워런 버핏</span>
+            <span class="nav-desc">오너어닝 · 1달러 · 경제적 해자</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="lynch">
+          <span class="nav-icon">🔍</span>
+          <div class="nav-text">
+            <span class="nav-title">피터 린치</span>
+            <span class="nav-desc">PEG · PEGY · 재고 건전성</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="oil">
+          <span class="nav-icon">🛢️</span>
+          <div class="nav-text">
+            <span class="nav-title">오일전문가</span>
+            <span class="nav-desc">자사주 소각 · 거위 수량 모으기</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="vip">
+          <span class="nav-icon">🏛️</span>
+          <div class="nav-text">
+            <span class="nav-title">한국형 가치투자</span>
+            <span class="nav-desc">VIP 4대 유형 · 2단 점프 여력</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="leader">
+          <span class="nav-icon">🏗️</span>
+          <div class="nav-text">
+            <span class="nav-title">07leader</span>
+            <span class="nav-desc">미래가치주 · 3년 부채축소</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="kiyohara">
+          <span class="nav-icon">🍶</span>
+          <div class="nav-text">
+            <span class="nav-title">기요하라 다쓰로</span>
+            <span class="nav-desc">넷넷 순현금 · 현금중립 PER</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="siegel">
+          <span class="nav-icon">📚</span>
+          <div class="nav-text">
+            <span class="nav-title">제러미 시겔</span>
+            <span class="nav-desc">DGRW 배당성장 & 퀄리티</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="minervini">
+          <span class="nav-icon">⚡</span>
+          <div class="nav-text">
+            <span class="nav-title">마크 미너비니</span>
+            <span class="nav-desc">SEPA 2단계 상승 & RS순위</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- 사이드바 푸터 -->
+      <div class="sidebar-footer">
+        <div class="sidebar-stat-card">
+          <div class="stat-row">
+            <span>총 유니버스</span>
+            <strong id="stat-total-count">0개</strong>
+          </div>
+          <div class="stat-row">
+            <span>주가 기준일</span>
+            <strong id="stat-base-date" style="color: #F59E0B;">2026.09.18 종가</strong>
+          </div>
+          <div class="stat-row">
+            <span>데이터 엔진</span>
+            <strong style="color: #10B981;">KR 실시간 시세 + FMP + DART</strong>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── 우측 메인 콘텐츠 ─────────────────────── -->
+    <main class="main-content">
+      <!-- 거장 배너 + 판정 기준 가이드 박스 -->
+      <section class="master-banner" id="master-banner">
+        <div class="banner-top-row">
+          <div class="master-banner-text">
+            <h2 id="banner-title">🎩 워런 버핏의 7대 관문 스크리너</h2>
+            <p id="banner-desc">10년 연속 영업이익 흑자 + 10년 평균 ROE 12% 이상 + 부채비율 100% 이하 + 1달러 테스트를 통과한 '경제적 해자' 보유 기업</p>
+          </div>
+          <div class="banner-stats">
+            <div class="b-stat">
+              <div class="label" id="b-stat-1-label">통과 종목수</div>
+              <div class="val" id="b-stat-1-val">0</div>
+            </div>
+            <div class="b-stat">
+              <div class="label">평균 배당수익률</div>
+              <div class="val" id="b-stat-dy">0%</div>
+            </div>
+            <div class="b-stat">
+              <div class="label">평균 PER</div>
+              <div class="val" id="b-stat-per">0배</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 판정 기준 설명 가이드 박스 -->
+        <div class="verdict-guide-box" id="verdict-guide-box">
+          <!-- 동적 렌더링 -->
+        </div>
+      </section>
+
+      <!-- 다중 거장 통과 전용: 커스텀 거장 조합기 -->
+      <section class="custom-combo-panel" id="custom-combo-panel" style="display: none;">
+        <div class="combo-header">
+          <div class="combo-title-area">
+            <span class="combo-title">🎯 나만의 거장 조합 스크리너</span>
+            <span class="combo-sub">원하는 거장을 직접 클릭하여 실시간 교집합(AND) 또는 합집합(OR) 종목을 발굴합니다.</span>
+          </div>
+          <div class="combo-mode-toggle">
+            <button type="button" class="combo-mode-btn active" data-mode="AND">모두 통과 (AND 교집합)</button>
+            <button type="button" class="combo-mode-btn" data-mode="OR">1개 이상 통과 (OR 합집합)</button>
+          </div>
+        </div>
+
+        <!-- 거장 선택 칩 목록 -->
+        <div class="combo-chips-row" id="combo-chips-row">
+          <button type="button" class="combo-chip" data-master="버핏">🎩 워런 버핏</button>
+          <button type="button" class="combo-chip" data-master="린치">🔍 피터 린치</button>
+          <button type="button" class="combo-chip" data-master="오일">🛢️ 오일전문가</button>
+          <button type="button" class="combo-chip" data-master="VIP">🏛️ VIP 가치</button>
+          <button type="button" class="combo-chip" data-master="리더">🏗️ 07leader</button>
+          <button type="button" class="combo-chip" data-master="기요하라">🍶 기요하라 다쓰로</button>
+          <button type="button" class="combo-chip" data-master="시겔">📚 제러미 시겔</button>
+          <button type="button" class="combo-chip" data-master="미너비니">⚡ 마크 미너비니</button>
+        </div>
+
+        <!-- 추천 프리셋 숏컷 & 액션 바 -->
+        <div class="combo-presets-row">
+          <span class="presets-label">⚡ 빠른 추천 조합:</span>
+          <button type="button" class="preset-btn" data-preset="버핏,미너비니">🚀 가치+모멘텀 (버핏+미너비니)</button>
+          <button type="button" class="preset-btn" data-preset="오일,시겔">💎 배당+소각 (오일+시겔)</button>
+          <button type="button" class="preset-btn" data-preset="리더,기요하라">🍶 딥밸류 턴어라운드 (리더+기요하라)</button>
+          <button type="button" class="preset-btn" data-preset="버핏,린치">📈 정통 가치성장 (버핏+린치)</button>
+          <button type="button" class="preset-btn" data-preset="버핏,오일,시겔">👑 3대 배당가치 (버핏+오일+시겔)</button>
+          <div class="preset-actions">
+            <button type="button" class="preset-action-btn" id="btn-combo-all">전체 선택</button>
+            <button type="button" class="preset-action-btn" id="btn-combo-clear">선택 해제</button>
+          </div>
+        </div>
+      </section>
+
+
+    <!-- 컨트롤 & 필터 바 -->
+    <section class="control-panel">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="종목명 또는 종목코드/티커 검색...">
+      </div>
+
+      <div class="filter-group">
+        <label>세부 시장:</label>
+        <select class="filter-select" id="market-filter">
+          <option value="ALL">전체 세부시장</option>
+          <option value="KOSPI">KOSPI (코스피)</option>
+          <option value="KOSDAQ">KOSDAQ (코스닥)</option>
+          <option value="NYSE">NYSE (뉴욕)</option>
+          <option value="NASDAQ">NASDAQ (나스닥)</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label id="verdict-filter-label">거장 판정:</label>
+        <select class="filter-select" id="verdict-filter">
+          <option value="ALL">전체 판정</option>
+        </select>
+      </div>
+
+      <div class="slider-group">
+        <span>최소 시총:</span>
+        <input type="range" id="marcap-slider" min="500" max="20000" step="500" value="1000">
+        <strong id="marcap-val">1,000억</strong>
+      </div>
+
+      <div class="slider-group">
+        <span>최대 PER:</span>
+        <input type="range" id="per-slider" min="3" max="50" step="1" value="30">
+        <strong id="per-val">30배</strong>
+      </div>
+
+      <div class="slider-group">
+        <span>최소 배당률:</span>
+        <input type="range" id="dy-slider" min="0" max="8" step="0.5" value="0">
+        <strong id="dy-val">0%</strong>
+      </div>
+
+      <div class="filter-group">
+        <label>3년 배당성장:</label>
+        <select class="filter-select" id="cagr-filter">
+          <option value="ALL">전체 (성장/동결/삭감)</option>
+          <option value="GROWTH">📈 배당 성장 (> 0%)</option>
+          <option value="HIGH_GROWTH">🔥 고성장 (≥ 10%)</option>
+          <option value="SUPER_GROWTH">🚀 초고성장 (≥ 20%)</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>총환원 & 소각:</label>
+        <select class="filter-select" id="yield-filter">
+          <option value="ALL">전체 환원율</option>
+          <option value="YIELD_3">💎 총환원율 ≥ 3%</option>
+          <option value="YIELD_5">🚀 총환원율 ≥ 5%</option>
+          <option value="YIELD_8">👑 고환원율 ≥ 8%</option>
+          <option value="BURN_ONLY">🔥 주식 소각 중 (소각률 > 0%)</option>
+          <option value="BURN_STRONG">💥 대규모 소각 (소각률 ≥ 2%)</option>
+          <option value="BURN_STREAK_3">⏳ 3년+ 연속 소각</option>
+          <option value="BURN_STREAK_5">🏆 5년+ 연속 소각 (장기소각)</option>
+        </select>
+      </div>
+
+      <button class="btn-reset" id="btn-reset">↺ 필터 초기화</button>
+    </section>
+
+    <!-- 데이터 테이블 -->
+    <section class="table-container">
+      <table id="screener-table">
+        <thead>
+          <tr id="table-header-row">
+            <!-- 자바스크립트로 동적 렌더링 -->
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- 자바스크립트로 동적 렌더링 -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── 사이클 레이더 뷰 (07leader 렌즈) ──────────── -->
+    <section class="cycle-container" id="cycle-radar-view" style="display: none;">
+      <!-- 업종 선택 바 -->
+      <div class="cycle-industry-bar" id="cycle-industry-bar">
+        <!-- JS로 동적 렌더링 -->
+      </div>
+
+      <!-- 상단 2열 그리드: 지표 차트 & 리더 3대 질문 체크리스트 -->
+      <div class="cycle-grid">
+        <!-- 좌측: 선행지표 차트 & 역사적 밴드 -->
+        <div class="cycle-card">
+          <div class="cycle-card-header">
+            <div>
+              <div class="cycle-card-title" id="cycle-chart-title">
+                <span>🛢️</span>
+                <span>업종 선행지표 10년 추이</span>
+              </div>
+              <div class="cycle-card-sub" id="cycle-chart-sub">
+                핵심 선행지표와 역사적 침체 밴드
+              </div>
+              <!-- 해운 등 세부 선종/서브섹터 전환 버튼 바 -->
+              <div class="cycle-sub-bar" id="cycle-sub-bar" style="display: none;">
+                <!-- 동적 렌더링 -->
+              </div>
+            </div>
+            <div id="cycle-chart-badge" style="text-align: right;">
+              <!-- 뱃지 동적 삽입 -->
+            </div>
+          </div>
+          
+          <div class="cycle-chart-wrap">
+            <canvas id="cycle-chart-canvas"></canvas>
+          </div>
+
+          <!-- 하단 코멘트 & 역사적 밴드 설명 -->
+          <div style="font-size: 12.5px; color: var(--text-secondary); background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 6px;" id="cycle-chart-meta">
+            <!-- 메타 정보 동적 삽입 -->
+          </div>
+        </div>
+
+        <!-- 우측: 밸류에이션 판독기 & 리더 3대 질문 체크리스트 -->
+        <div class="cycle-card">
+          <div class="cycle-card-header">
+            <div>
+              <div class="cycle-card-title">
+                <span>🎯</span>
+                <span>07leader 사이클주 정독 & PER 판독기</span>
+              </div>
+              <div class="cycle-card-sub">
+                사이클 국면 진단 및 3대 구조적 조건 충족 여부 검증
+              </div>
+            </div>
+          </div>
+
+          <!-- 사이클주 PER 역발상 밸류에이션 판독기 -->
+          <div class="cycle-valuation-box" id="cycle-valuation-box">
+            <!-- 동적 렌더링 -->
+          </div>
+
+          <!-- 리더 어록 박스 -->
+          <div class="leader-quote-box" id="cycle-leader-quote">
+            <!-- 리더 어록 삽입 -->
+          </div>
+
+          <!-- 3대 질문 인터랙티브 체크리스트 -->
+          <div class="checklist-items" id="cycle-checklist-container">
+            <!-- 체크리스트 아이템 동적 삽입 -->
+          </div>
+
+          <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--border-subtle);">
+            💡 <strong>리더의 길목 원칙</strong>: "지표가 바닥권이라도 1·2·3번 질문 중 하나라도 '아니오'라면 아직 칼날을 잡을 때가 아닙니다. 3대 구조적 조건이 확인될 때 비로소 3년 묻어둘 선취매의 때입니다."
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단: 업종 대표주 10년 펀더멘털 즉시 검증 테이블 -->
+      <div class="cycle-card" style="margin-top: 6px;">
+        <div class="cycle-card-header">
+          <div>
+            <div class="cycle-card-title">
+              <span>📋</span>
+              <span id="cycle-table-title">업종 대표주 10년 체력 검증</span>
+            </div>
+            <div class="cycle-card-sub">
+              종목을 클릭하면 10년 EPS/배당 차트, 주식수 소각률, 8대 거장 동시 평가를 확인합니다.
+            </div>
+          </div>
+          <div style="font-size: 12px; color: var(--accent-gold); font-weight: 600;">
+            ✨ 행 클릭 시 10년 재무 모달 팝업
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table id="cycle-stocks-table">
+            <thead>
+              <tr>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">종목명 (코드)</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">시장</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">현재가</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">시가총액</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">PER</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">PBR</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">배당수익률</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">총환원율</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">10년 무적자</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">부채비율</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">8대 거장 통과 현황</th>
+              </tr>
+            </thead>
+            <tbody id="cycle-stocks-tbody">
+              <!-- 동적 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+  </div> <!-- /.app-layout -->
+
+  <!-- ── 종목 상세 모달 ──────────────────────── -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <h3 id="m-name-code">삼성전자 (005930)</h3>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" id="m-meta-line">
+            KOSPI | 현재가 270,000원 | 시가총액 157.8조 | PER 12.1배 | PBR 1.1배 | 배당수익률 0.6%
+          </p>
+        </div>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 10년 펀더멘털 차트 (EPS/DPS & 주식수/소각률 탭 전환) -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="chart-tabs">
+                <button class="chart-tab-btn active" id="tab-btn-eps-dps">📊 배당금 & EPS 추이</button>
+                <button class="chart-tab-btn" id="tab-btn-shares-burn">🔥 주식수 & 소각률 추이</button>
+              </div>
+              <span id="m-cagr-badge" style="font-size:12px; font-weight:700;"></span>
+            </div>
+            <div class="chart-legend" id="chart-legend-box">
+              <div class="legend-item"><div class="dot-bar" style="background:#10B981;"></div><span>주당배당금(DPS 막대)</span></div>
+              <div class="legend-item"><div class="dot-line" style="background:#3B82F6;"></div><span>주당순이익(EPS 꺾은선)</span></div>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="main-detail-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- 8대 거장 종합 채점표 -->
+        <div>
+          <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">
+            🏆 8대 거장 동시 채점 스코어카드
+          </h4>
+          <div class="eval-grid" id="eval-grid">
+            <!-- 동적 삽입 -->
+          </div>
+        </div>
+
+        <!-- 10개년 재무 시계열 표 -->
+        <div>
+          <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">
+            📋 10개년 펀더멘털 상세 수치 (FnSpace + DART)
+          </h4>
+          <div style="overflow-x: auto;">
+            <table class="series-table" id="series-table">
+              <!-- 동적 삽입 -->
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 푸터 ────────────────────────────────── -->
+  <footer>
+    거장의 렌즈 스크리너 — 데이터 출처: FnSpace 10년 재무 데이터, 금융감독원 전자공시(DART), 네이버 증권 시세.
+  </footer>
+
+  <!-- ── 스크립트 ────────────────────────────── -->
+  <script>
+    // 전역 상태
+    let allData = [];
+    let currentCountry = 'ALL';
+    let currentMaster = 'buffett';
+    let selectedCustomMasters = new Set();
+    let customMatchMode = 'AND';
+    let sortColumn = 'marcap';
+    let sortOrder = 'desc';
+    let chartInstance = null;
+    let currentChartTab = 'eps_dps';
+    let currentModalItem = null;
+    let currentCycleIndustry = 'refining';
+    let currentShippingSub = 'bulk';
+    let cycleChartInstance = null;
+    let cycleCheckedMap = {};
+
+    // 거장별 설정 메타데이터
+    const MASTER_CONFIG = {
+      cycle: {
+        name: '사이클 레이더',
+        icon: '🌊',
+        bannerTitle: '🌊 사이클 레이더 (07leader 렌즈)',
+        bannerDesc: '선행지표 바닥권 + 경쟁사 감산/도산 + 3년 적자 버틸 체력을 충족하는 시클리컬 1등 기업 탐지',
+        statLabel: '핵심 업종',
+        verdicts: ['전체'],
+        criteria: [],
+        getVerdict: () => '사이클'
+      },
+      all: {
+        name: '전종목 자유 탐색기',
+        icon: '🔍',
+        bannerTitle: '🔍 한·미 2,723개 전종목 자유 탐색기',
+        bannerDesc: '8대 거장의 통과/탈락 기준에 구애받지 않고, 한국·미국 전종목을 검색하여 거장 채점 결과와 배당·환원·소각 펀더멘털을 자유롭게 확인합니다.',
+        statLabel: '표시 종목',
+        verdicts: ['전체 (무제한)', '거장 1인+ 통과', '거장 2인+ 통과', '거장 3인+ 통과', '거장 5인+ 통과', '거장 미통과(자유탐색)'],
+        criteria: [
+          { badge: '자유 검색', color: '#3B82F6', desc: '한국 1,835개 + 미국 888개 상장기업 중 원하는 종목명이나 티커코드를 실시간 검색' },
+          { badge: '종목 클릭', color: '#10B981', desc: '종목 클릭 시 10년 EPS/배당 차트 + 주식수/소각률 차트 + 8대 거장 동시 채점표 확인' },
+          { badge: '환원·소각 필터', color: '#F59E0B', desc: '배당수익률, 총환원율, 실질 주식 소각률, 연속 소각 연수로 자유 스크리닝' }
+        ],
+        getVerdict: d => {
+          const cnt = getPassedMasters(d).length;
+          if (cnt >= 5) return '거장 5인+ 통과';
+          if (cnt >= 3) return '거장 3인+ 통과';
+          if (cnt >= 2) return '거장 2인+ 통과';
+          if (cnt >= 1) return '거장 1인+ 통과';
+          return '거장 미통과(자유탐색)';
+        },
+        customCols: [
+          { key: 'pass_count', label: '거장통과', render: d => {
+            const p = getPassedMasters(d);
+            if (p.length === 0) return `<span style="color:#64748B; font-size:11.5px;">0명</span>`;
+            const color = p.length >= 5 ? '#EC4899' : (p.length >= 3 ? '#A855F7' : (p.length >= 2 ? '#F59E0B' : '#3B82F6'));
+            return `<span class="badge" style="background:${color}22; color:${color}; border:1px solid ${color}66; font-weight:700;">${p.length}명 통과</span>`;
+          }},
+          { key: 'passed_masters', label: '통과 거장', render: d => {
+            const p = getPassedMasters(d);
+            if (p.length === 0) return `<span style="color:#64748B; font-size:11px;">-</span>`;
+            return `<div style="display:flex; flex-wrap:wrap; gap:3px; max-width:200px;">` +
+              p.map(m => `<span class="badge" style="background:#1E293B; color:#CBD5E1; padding:1px 5px; font-size:10.5px;">${m}</span>`).join('') +
+              `</div>`;
+          }},
+          { key: 'roe', label: 'ROE', render: d => `${d.roe}%` },
+          { key: 'debt_ratio', label: '부채비율', render: d => `${d.debt_ratio}%` }
+        ]
+      },
+      buffett: {
+        name: '워런 버핏',
+        icon: '🎩',
+        bannerTitle: '🎩 워런 버핏의 7대 관문 스크리너',
+        bannerDesc: '10년 무적자 + ROE 12%+ + 부채비율 100% 이하 등 5개 관문 중 4개 이상 충족 & 안전마진 확보 기업',
+        statLabel: '버핏 통과',
+        verdicts: ['통과', '대기', '탈락'],
+        criteria: [
+          { badge: '통과', color: '#10B981', desc: '5개 관문 중 4개 이상 통과 & 10년 연속 흑자 & 안전마진 확보 (ROE·부채·성장성 종합 충족)' },
+          { badge: '대기', color: '#F59E0B', desc: '관문 3개 이상 통과 또는 안전마진 진입권이나 1~2개 항목 미세 미달' },
+          { badge: '탈락', color: '#EF4444', desc: '10년 중 영업적자 다수 발생 또는 관문 2개 이하 충족' }
+        ],
+        getVerdict: d => d.buffett.verdict,
+        customCols: [
+          { key: 'buffett_verdict', label: '버핏 판정', render: d => renderBadge(d.buffett.verdict) },
+          { key: 'buffett_pass_cnt', label: '통과관문', render: d => `${d.buffett.pass_cnt} / 5개` },
+          { key: 'roe', label: '10년 평균 ROE', render: d => `${d.roe}%` },
+          { key: 'debt_ratio', label: '부채비율', render: d => `${d.debt_ratio}%` },
+          { key: 'safety_margin', label: '바닥 안전마진', render: d => d.buffett.safety_margin > 0 ? `<span style="color:#10B981">+${d.buffett.safety_margin}%</span>` : `<span style="color:#94A3B8">${d.buffett.safety_margin}%</span>` }
+        ]
+      },
+      lynch: {
+        name: '피터 린치',
+        icon: '🔍',
+        bannerTitle: '🔍 피터 린치의 성장속도 대비 가격표(PEG) 스크리너',
+        bannerDesc: '6대 유형 분류 + PEG 1.0 이하(0.5 저평가) + 배당 포함 PEGY 1.8 이상 + 매출증가율 > 재고증가율 건전성 검증',
+        statLabel: '추적 가치',
+        verdicts: ['추적 가치', '검증 필요', '관찰만'],
+        criteria: [
+          { badge: '추적 가치', color: '#10B981', desc: 'PEG 1.0 이하(또는 PEGY 1.8 이상) & 매출증가율 > 재고증가율(재고 건전성 정상)' },
+          { badge: '검증 필요', color: '#F59E0B', desc: 'PEG 1.0~1.5 구간이거나 매출 대비 재고증가율이 높아 주의가 필요한 종목' },
+          { badge: '관찰만', color: '#EF4444', desc: 'PEG 2.0 초과(성장속도 대비 고평가) 또는 이익 역성장 종목' }
+        ],
+        getVerdict: d => d.lynch.verdict,
+        customCols: [
+          { key: 'lynch_verdict', label: '린치 판정', render: d => renderBadge(d.lynch.verdict) },
+          { key: 'lynch_type', label: '6대 유형', render: d => `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.lynch.type}</span>` },
+          { key: 'eps_cagr', label: '5년 EPS성장', render: d => `${d.lynch.eps_cagr}%` },
+          { key: 'peg', label: 'PEG (성장비용)', render: d => d.lynch.peg < 50 ? (d.lynch.peg <= 0.5 ? `<strong style="color:#10B981">${d.lynch.peg}</strong>` : d.lynch.peg) : '-' },
+          { key: 'pegy', label: 'PEGY (배당포함)', render: d => d.lynch.pegy > 0 ? (d.lynch.pegy >= 2.0 ? `<strong style="color:#F59E0B">${d.lynch.pegy}</strong>` : d.lynch.pegy) : '-' },
+          { key: 'inv_status', label: '매출/재고', render: d => d.lynch.inv_ok ? '<span style="color:#10B981">정상</span>' : '<span style="color:#EF4444">주의</span>' }
+        ]
+      },
+      oil: {
+        name: '오일전문가',
+        icon: '🛢️',
+        bannerTitle: '🛢️ 오일전문가의 거위 수량 & 자사주 소각 스크리너',
+        bannerDesc: 'PER 저평가 + 배당률 3%+ + 5년 연속 무적자 + 실제 자사주 소각(발행주식수 감소) 100점 배점표',
+        statLabel: 'A·B등급',
+        verdicts: ['A (적극 매수)', 'B (매수 고려)', 'C (보유만)', 'D (비추천)'],
+        criteria: [
+          { badge: 'A (적극 매수)', color: '#10B981', desc: '배점 80점 이상: PER 저평가 & 시가배당률 4%+ & 5년 무적자 & 자사주 소각 실적 종합 고득점' },
+          { badge: 'B (매수 고려)', color: '#F59E0B', desc: '배점 70~79점: 기본 배당 체력 확보 및 저PER이나 소각 미실시' },
+          { badge: 'C (보유만)', color: '#94A3B8', desc: '배점 50~69점: 배당률 2.5~4% 수준이거나 이익 성장 둔화' },
+          { badge: 'D (비추천)', color: '#EF4444', desc: '배점 50점 미만: 5년 중 적자 이력 또는 시가배당률 미달' }
+        ],
+        getVerdict: d => d.oil.grade,
+        customCols: [
+          { key: 'oil_grade', label: '오일 등급', render: d => renderBadge(d.oil.grade) },
+          { key: 'oil_score', label: '점수', render: d => `<strong>${d.oil.score}</strong>점` },
+          { key: 'dy', label: '시가배당률', render: d => `<strong style="color:#10B981">${d.dy}%</strong>` },
+          { key: 'burned', label: '자사주 소각', render: d => d.has_burned ? `<span class="badge badge-burn">소각실적있음</span>` : '<span style="color:#64748B">미소각</span>' },
+          { key: 'no_loss', label: '5년 무적자', render: d => d.oil.no_loss_5y ? '<span style="color:#10B981">달성</span>' : '<span style="color:#EF4444">적자이력</span>' }
+        ]
+      },
+      vip: {
+        name: '한국형 가치투자',
+        icon: '🏛️',
+        bannerTitle: '🏛️ VIP 최준철·김민국의 4대 유형 & 2단 점프 스크리너',
+        bannerDesc: '스노우볼(10년 고ROE 복리) / 그로스 / 저평가 / 턴어라운드 분류 및 이익 성장+멀티플 리레이팅 상승여력',
+        statLabel: '적극 편입',
+        verdicts: ['적극 편입', '편입 검토', '관찰 대상', '편입 불가'],
+        criteria: [
+          { badge: '적극 편입', color: '#10B981', desc: '10년 고ROE 스노우볼형 기업 또는 2단 점프 목표 상승여력 40% 이상' },
+          { badge: '편입 검토', color: '#F59E0B', desc: '상승여력 20~40% 구간의 그로스/저평가 가치주' },
+          { badge: '관찰 대상', color: '#94A3B8', desc: '상승여력 0~20% 또는 BM 경쟁력 추가 관찰 필요' },
+          { badge: '편입 불가', color: '#EF4444', desc: 'ROE 역성장 및 밸류에이션 고평가 기업' }
+        ],
+        getVerdict: d => d.vip.verdict,
+        customCols: [
+          { key: 'vip_verdict', label: 'VIP 판정', render: d => renderBadge(d.vip.verdict) },
+          { key: 'vip_type', label: '4대 유형', render: d => `<span class="badge" style="background:#312E81; color:#A5B4FC;">${d.vip.type}</span>` },
+          { key: 'vip_pos', label: '포지션', render: d => d.vip.position },
+          { key: 'vip_upside', label: '2단점프 여력', render: d => d.vip.upside > 0 ? `<strong style="color:#F59E0B">+${d.vip.upside}%</strong>` : '-' },
+          { key: 'roe', label: 'ROE', render: d => `${d.roe}%` }
+        ]
+      },
+      leader: {
+        name: '07leader',
+        icon: '🏗️',
+        bannerTitle: '🏗️ 07leader의 미래가치주 & 차입금 축소 턴어라운드 스크리너',
+        bannerDesc: 'PER 6 이하 + PBR 0.5 이하 + 3년 연속 차입금(부채) 감소 + 감가상각 종료 숨은 현금흐름 선취매',
+        statLabel: '길목 선취매',
+        verdicts: ['길목 선취매', '분할 매집', '관찰 대기', '매수 금지'],
+        criteria: [
+          { badge: '길목 선취매', color: '#10B981', desc: '80점 이상 & PBR 1.0 이하: PER 6 이하 + PBR 0.5 이하 + 3년 연속 부채 축소 + 영업익 개선' },
+          { badge: '분할 매집', color: '#F59E0B', desc: '68~79점 & PBR 1.5 이하: 부채 감소 추세 또는 배당/자산 안전마진 보유' },
+          { badge: '관찰 대기', color: '#94A3B8', desc: '50~67점: 부채 정체 또는 턴어라운드 초기 단계' },
+          { badge: '매수 금지', color: '#EF4444', desc: '50점 미만 또는 부채 지속 증가/적자 지속' }
+        ],
+        getVerdict: d => d.leader.verdict,
+        customCols: [
+          { key: 'leader_verdict', label: '리더 판정', render: d => renderBadge(d.leader.verdict) },
+          { key: 'leader_score', label: '리더 점수', render: d => `<strong>${d.leader.score}</strong>점` },
+          { key: 'debt_down', label: '부채 축소', render: d => d.leader.debt_down ? '<span style="color:#10B981">3년연속감소</span>' : '<span style="color:#64748B">정체/증가</span>' },
+          { key: 'pbr', label: 'PBR', render: d => d.pbr <= 0.5 ? `<strong style="color:#10B981">${d.pbr}</strong>` : d.pbr }
+        ]
+      },
+      kiyohara: {
+        name: '기요하라 다쓰로',
+        icon: '🍶',
+        bannerTitle: '🍶 기요하라 다쓰로의 넷넷 순현금 & 현금중립 PER 스크리너',
+        bannerDesc: '순현금(유동자산+유가증권×0.7-총부채) 흑자 + 순현금비율(NCR) 30% 이상 + 현금중립PER(CN-PER) 6배 이하의 극단적 저평가 자산주',
+        statLabel: '기요하라 통과',
+        verdicts: ['넷넷 초저평가', '순현금 우량', '현금 보통', '순부채 차입'],
+        criteria: [
+          { badge: '넷넷 초저평가', color: '#10B981', desc: '순현금비율(NCR) ≥ 70% 또는 (NCR ≥ 35% & 현금중립PER ≤ 4.0배 & 순현금 흑자)' },
+          { badge: '순현금 우량', color: '#F59E0B', desc: 'NCR ≥ 25% 또는 현금중립PER ≤ 8.0배 (시총 대비 현금 풍부)' },
+          { badge: '현금 보통', color: '#94A3B8', desc: '순현금 > 0 (부채보다 현금이 많으나 비율 25% 미만)' },
+          { badge: '순부채 차입', color: '#EF4444', desc: '순현금 적자 (총부채가 유동자산+유가증권보다 많음)' }
+        ],
+        getVerdict: d => d.kiyohara.verdict,
+        customCols: [
+          { key: 'kiyohara_verdict', label: '기요하라 판정', render: d => renderBadge(d.kiyohara.verdict) },
+          { key: 'kiyohara_net_cash', label: '순현금(억)', render: d => d.kiyohara.net_cash > 0 ? `<strong style="color:#10B981">${d.kiyohara.net_cash.toLocaleString()}</strong>` : `<span style="color:#94A3B8">${d.kiyohara.net_cash.toLocaleString()}</span>` },
+          { key: 'kiyohara_ncr', label: '순현금비율(NCR)', render: d => d.kiyohara.ncr >= 100 ? `<strong style="color:#F59E0B">🔥 ${d.kiyohara.ncr}%</strong>` : (d.kiyohara.ncr >= 50 ? `<strong style="color:#10B981">${d.kiyohara.ncr}%</strong>` : `${d.kiyohara.ncr}%`) },
+          { key: 'kiyohara_cn_per', label: '현금중립PER', render: d => d.kiyohara.cn_per < 0 ? `<span class="badge" style="background:#064E3B; color:#34D399;">음수 (${d.kiyohara.cn_per})</span>` : (d.kiyohara.cn_per <= 5.0 ? `<strong style="color:#10B981">${d.kiyohara.cn_per}배</strong>` : `${d.kiyohara.cn_per}배`) },
+          { key: 'pbr', label: 'PBR', render: d => `${d.pbr}` }
+        ]
+      },
+      siegel: {
+        name: '제러미 시겔',
+        icon: '📚',
+        bannerTitle: '📚 제러미 시겔의 배당성장 & DGRW 퀄리티 스크리너',
+        bannerDesc: '《투자의 미래》 배당지급 + 배당성향 100% 이하 + PER 27 이하 승자군 필터 & DGRW 퀄리티 점수(EPS성장50+ROE25+ROA25)',
+        statLabel: '시겔 통과',
+        verdicts: ['DGRW 최우량', '배당퀄리티 우량', '배당 유지', '가치함정/비추천'],
+        criteria: [
+          { badge: 'DGRW 최우량', color: '#10B981', desc: '사전필터 3종 통과 & 퀄리티점수 ≥ 70점 & 배당률 ≥ 2.5% & 배당성향 ≤ 60%' },
+          { badge: '배당퀄리티 우량', color: '#F59E0B', desc: '사전필터 3종 통과 & 퀄리티점수 ≥ 50점 (이익성장+ROE+ROA 균형 우량주)' },
+          { badge: '배당 유지', color: '#94A3B8', desc: '사전필터 3종 통과 (배당을 지급하나 퀄리티 점수가 50점 미만)' },
+          { badge: '가치함정/비추천', color: '#EF4444', desc: '배당성향 100% 초과(이익초과 배당) 또는 무배당 또는 PER 27 초과(성장의 함정)' }
+        ],
+        getVerdict: d => d.siegel ? d.siegel.verdict : '가치함정/비추천',
+        customCols: [
+          { key: 'siegel_verdict', label: '시겔 판정', render: d => renderBadge(d.siegel ? d.siegel.verdict : '-') },
+          { key: 'siegel_score', label: 'DGRW점수', render: d => `<strong>${d.siegel ? d.siegel.score : '-'}</strong>점` },
+          { key: 'payout', label: '배당성향', render: d => `${d.payout}%` },
+          { key: 'siegel_roa', label: 'ROA(총자산)', render: d => `${d.siegel ? d.siegel.roa : '-'}%` },
+          { key: 'roe', label: 'ROE', render: d => `${d.roe}%` }
+        ]
+      },
+      minervini: {
+        name: '마크 미너비니',
+        icon: '⚡',
+        bannerTitle: '⚡ 마크 미너비니의 SEPA 2단계 상승 & RS 주도주 스크리너',
+        bannerDesc: '2단계 상승 국면(Stage 2 Uptrend) + 실적 가속도(EPS) + 시장 주도 상대강도(RS순위) + 펀더멘털 종합점수 결합 SEPA 전략',
+        statLabel: '2단계 상승',
+        verdicts: ['🚀 2단계 상승', '📈 추세 형성', '기준 미달'],
+        criteria: [
+          { badge: '🚀 2단계 상승', color: '#10B981', desc: '주도주 2단계 상승 국면 & 종합점수 60점 이상 (강력한 실적 가속도 + 시장 주도 상대강도 RS)' },
+          { badge: '📈 추세 형성', color: '#F59E0B', desc: '상승 추세 진입권 (SEPA 필터 통과 & 종합점수 60점 미만 관찰권)' },
+          { badge: '기준 미달', color: '#EF4444', desc: '이동평균선 역배열, 4단계 하락 국면 또는 실적/추세 기준 미달 종목' }
+        ],
+        getVerdict: d => (d.minervini ? d.minervini.verdict : '기준 미달'),
+        customCols: [
+          { key: 'minervini_verdict', label: 'SEPA 판정', render: d => renderBadge(d.minervini ? d.minervini.verdict : '기준 미달') },
+          { key: 'minervini_score', label: '종합점수', render: d => (d.minervini && d.minervini.score !== null && d.minervini.score !== undefined) ? `<strong>${d.minervini.score}</strong>점` : '-' },
+          { key: 'minervini_rs', label: 'RS순위', render: d => {
+            if (!d.minervini || d.minervini.rs === null || d.minervini.rs === undefined) return '-';
+            const r = d.minervini.rs;
+            if (r >= 90) return `<strong style="color:#10B981;">🔥 ${r}</strong>`;
+            if (r >= 80) return `<strong style="color:#38BDF8;">${r}</strong>`;
+            return `${r}`;
+          }},
+          { key: 'minervini_eps', label: '최신분기 EPS성장', render: d => {
+            if (!d.minervini || d.minervini.eps_growth === null || d.minervini.eps_growth === undefined) return '-';
+            const val = d.minervini.eps_growth;
+            return val > 0 ? `<strong style="color:#10B981">+${val}%</strong>` : `<span style="color:#EF4444">${val}%</span>`;
+          }},
+          { key: 'minervini_theme', label: '주도 테마/재료', render: d => (d.minervini && d.minervini.theme && d.minervini.theme !== '-') ? `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.minervini.theme}</span>` : '-' }
+        ]
+      },
+      multipass: {
+        name: '다중 거장 통과',
+        icon: '🌟',
+        bannerTitle: '🌟 8대 거장 다중 통과 (교집합) 스크리너',
+        bannerDesc: '버핏, 린치, 오일, VIP, 07leader, 기요하라, 시겔, 미너비니 중 2인 이상 복수 거장의 렌즈를 동시 통과한 엄선 종목',
+        statLabel: '다중 통과',
+        verdicts: ['8인 전원 통과', '7인 통과', '6인 통과', '5인 통과', '4인 통과', '3인 통과', '2인 통과'],
+        criteria: [
+          { badge: '8인 전원 통과', color: '#EC4899', desc: '버핏·린치·오일·VIP·리더·기요하라·시겔·미너비니 8인의 철학을 모두 통과한 무결점 가치성장주' },
+          { badge: '7인 통과', color: '#F59E0B', desc: '8개 거장 중 7인의 관문을 통과한 극소수 초우량주' },
+          { badge: '6인 / 5인 통과', color: '#A855F7', desc: '복수 거장들의 철학이 만장일치로 일치한 종목군' },
+          { badge: '4인 / 3인 / 2인', color: '#3B82F6', desc: '복수 거장의 안전마진 교집합 종목군' }
+        ],
+        getVerdict: d => {
+          const cnt = getPassedMasters(d).length;
+          if (cnt === 8) return '8인 전원 통과';
+          if (cnt === 7) return '7인 통과';
+          if (cnt === 6) return '6인 통과';
+          if (cnt === 5) return '5인 통과';
+          if (cnt === 4) return '4인 통과';
+          if (cnt === 3) return '3인 통과';
+          if (cnt === 2) return '2인 통과';
+          return '1인 이하';
+        },
+        customCols: [
+          { key: 'pass_count', label: '통과 거장 수', render: d => {
+            const p = getPassedMasters(d);
+            const color = p.length === 8 ? '#EC4899' : (p.length >= 6 ? '#F59E0B' : (p.length >= 4 ? '#A855F7' : (p.length >= 3 ? '#3B82F6' : '#10B981')));
+            return `<span class="badge" style="background:${color}22; color:${color}; border:1px solid ${color}66; font-size:12px; font-weight:800;">${p.length}인 통과</span>`;
+          }},
+          { key: 'passed_masters', label: '통과 거장 조합', render: d => {
+            const p = getPassedMasters(d);
+            return `<div style="display:flex; flex-wrap:wrap; gap:3px; max-width:240px;">` +
+              p.map(m => `<span class="badge" style="background:#1E293B; color:#CBD5E1; padding:2px 6px; font-size:11px;">${m}</span>`).join('') +
+              `</div>`;
+          }},
+          { key: 'roe', label: '10년 평균 ROE', render: d => `${d.roe}%` }
+        ]
+      }
+    };
+
+    // 통과 거장 추출 도우미
+    function getPassedMasters(d) {
+      const p = [];
+      if (d.buffett && d.buffett.verdict === '통과') p.push('버핏');
+      if (d.lynch && d.lynch.verdict === '추적 가치') p.push('린치');
+      if (d.oil && (d.oil.grade === 'A (적극 매수)' || d.oil.grade === 'B (매수 고려)')) p.push('오일');
+      if (d.vip && d.vip.verdict === '적극 편입') p.push('VIP');
+      if (d.leader && d.leader.verdict === '길목 선취매') p.push('리더');
+      if (d.kiyohara && (d.kiyohara.verdict === '넷넷 초저평가' || d.kiyohara.verdict === '순현금 우량')) p.push('기요하라');
+      if (d.siegel && (d.siegel.verdict === 'DGRW 최우량' || d.siegel.verdict === '배당퀄리티 우량')) p.push('시겔');
+      if (d.minervini && d.minervini.passed) p.push('미너비니');
+      return p;
+    }
+
+    // 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      // 데이터 로드
+      if (window.SCREENER_DATA && window.SCREENER_DATA.length > 0) {
+        allData = window.SCREENER_DATA;
+        initUI();
+      } else {
+        fetch('screener_data.json')
+          .then(res => res.json())
+          .then(data => {
+            allData = data;
+            initUI();
+          })
+          .catch(err => {
+            console.error('데이터 로드 실패:', err);
+            alert('데이터 파일을 불러오지 못했습니다. 같은 폴더에 screener_data.js 또는 screener_data.json이 있는지 확인하세요.');
+          });
+      }
+    });
+
+    function initUI() {
+      updateSidebarStats();
+      setupEventListeners();
+      updateMasterView(currentMaster);
+    }
+
+    // 사이드바 총 유니버스 통계 표시
+    function updateSidebarStats() {
+      const el = document.getElementById('stat-total-count');
+      if (el) {
+        const krCnt = allData.filter(x => x.country === 'KR').length;
+        const usCnt = allData.filter(x => x.country === 'US').length;
+        if (currentCountry === 'KR') {
+          el.textContent = `${krCnt.toLocaleString()}개 (한국)`;
+        } else if (currentCountry === 'US') {
+          el.textContent = `${usCnt.toLocaleString()}개 (미국)`;
+        } else {
+          el.textContent = `${allData.length.toLocaleString()}개 (한·미 통합)`;
+        }
+      }
+      const dateEl = document.getElementById('stat-base-date');
+      if (dateEl && window.SCREENER_DATE) {
+        dateEl.textContent = `${window.SCREENER_DATE} 종가`;
+      }
+    }
+
+    // 이벤트 리스너 설정
+    function setupEventListeners() {
+      // 국가/시장 탭 선택 (한국 / 미국 / 전체)
+      document.querySelectorAll('.country-pill').forEach(btn => {
+        btn.addEventListener('click', e => {
+          document.querySelectorAll('.country-pill').forEach(b => b.classList.remove('active'));
+          const target = e.currentTarget;
+          target.classList.add('active');
+          currentCountry = target.dataset.country;
+          updateSidebarStats();
+          if (currentMaster === 'cycle') {
+            renderCycleRadar();
+          } else {
+            renderTable();
+          }
+        });
+      });
+
+      // 거장 네비게이션 전환 (사이드바)
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', e => {
+          document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+          const target = e.currentTarget;
+          target.classList.add('active');
+          currentMaster = target.dataset.master;
+          updateMasterView(currentMaster);
+        });
+      });
+
+      // 검색 & 필터
+      document.getElementById('search-input').addEventListener('input', renderTable);
+      document.getElementById('market-filter').addEventListener('change', renderTable);
+      document.getElementById('verdict-filter').addEventListener('change', renderTable);
+
+      // 슬라이더들
+      const marcapSlider = document.getElementById('marcap-slider');
+      marcapSlider.addEventListener('input', () => {
+        document.getElementById('marcap-val').textContent = `${parseInt(marcapSlider.value).toLocaleString()}억`;
+        renderTable();
+      });
+
+      const perSlider = document.getElementById('per-slider');
+      perSlider.addEventListener('input', () => {
+        document.getElementById('per-val').textContent = `${perSlider.value}배`;
+        renderTable();
+      });
+
+      const dySlider = document.getElementById('dy-slider');
+      dySlider.addEventListener('input', () => {
+        document.getElementById('dy-val').textContent = `${dySlider.value}%`;
+        renderTable();
+      });
+
+      document.getElementById('cagr-filter').addEventListener('change', renderTable);
+      document.getElementById('yield-filter').addEventListener('change', renderTable);
+
+      // ── 커스텀 거장 조합기 이벤트 리스너 ───────────────
+      document.querySelectorAll('.combo-chip').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const m = e.currentTarget.dataset.master;
+          if (selectedCustomMasters.has(m)) {
+            selectedCustomMasters.delete(m);
+            e.currentTarget.classList.remove('active');
+          } else {
+            selectedCustomMasters.add(m);
+            e.currentTarget.classList.add('active');
+          }
+          renderTable();
+        });
+      });
+
+      document.querySelectorAll('.combo-mode-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          document.querySelectorAll('.combo-mode-btn').forEach(b => b.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          customMatchMode = e.currentTarget.dataset.mode;
+          renderTable();
+        });
+      });
+
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const preset = e.currentTarget.dataset.preset.split(',');
+          selectedCustomMasters.clear();
+          preset.forEach(m => selectedCustomMasters.add(m));
+          document.querySelectorAll('.combo-chip').forEach(chip => {
+            if (selectedCustomMasters.has(chip.dataset.master)) {
+              chip.classList.add('active');
+            } else {
+              chip.classList.remove('active');
+            }
+          });
+          renderTable();
+        });
+      });
+
+      const btnComboAll = document.getElementById('btn-combo-all');
+      if (btnComboAll) {
+        btnComboAll.addEventListener('click', () => {
+          document.querySelectorAll('.combo-chip').forEach(chip => {
+            selectedCustomMasters.add(chip.dataset.master);
+            chip.classList.add('active');
+          });
+          renderTable();
+        });
+      }
+
+      const btnComboClear = document.getElementById('btn-combo-clear');
+      if (btnComboClear) {
+        btnComboClear.addEventListener('click', () => {
+          selectedCustomMasters.clear();
+          document.querySelectorAll('.combo-chip').forEach(chip => {
+            chip.classList.remove('active');
+          });
+          renderTable();
+        });
+      }
+
+      // 리셋 버튼
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        selectedCustomMasters.clear();
+        document.querySelectorAll('.combo-chip').forEach(chip => {
+          chip.classList.remove('active');
+        });
+        document.getElementById('search-input').value = '';
+        document.getElementById('market-filter').value = 'ALL';
+        document.getElementById('verdict-filter').value = 'ALL';
+        document.getElementById('cagr-filter').value = 'ALL';
+        document.getElementById('yield-filter').value = 'ALL';
+        currentCountry = 'ALL';
+        document.querySelectorAll('.country-pill').forEach(b => b.classList.remove('active'));
+        const defaultPill = document.querySelector('.country-pill[data-country="ALL"]');
+        if (defaultPill) defaultPill.classList.add('active');
+        updateSidebarStats();
+        marcapSlider.value = 1000;
+        document.getElementById('marcap-val').textContent = '1,000억';
+        perSlider.value = 30;
+        document.getElementById('per-val').textContent = '30배';
+        dySlider.value = 0;
+        document.getElementById('dy-val').textContent = '0%';
+        renderTable();
+      });
+
+      // 차트 탭 전환 (EPS/DPS vs 주식수/소각률)
+      document.getElementById('tab-btn-eps-dps').addEventListener('click', () => {
+        currentChartTab = 'eps_dps';
+        document.getElementById('tab-btn-eps-dps').classList.add('active');
+        document.getElementById('tab-btn-shares-burn').classList.remove('active');
+        if (currentModalItem) renderModalChart(currentModalItem);
+      });
+      document.getElementById('tab-btn-shares-burn').addEventListener('click', () => {
+        currentChartTab = 'shares_burn';
+        document.getElementById('tab-btn-shares-burn').classList.add('active');
+        document.getElementById('tab-btn-eps-dps').classList.remove('active');
+        if (currentModalItem) renderModalChart(currentModalItem);
+      });
+
+      // 모달 닫기
+      document.getElementById('modal-close-btn').addEventListener('click', () => {
+        document.getElementById('detail-modal').classList.remove('active');
+      });
+      document.getElementById('detail-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'detail-modal') {
+          document.getElementById('detail-modal').classList.remove('active');
+        }
+      });
+    }
+
+    // ── 사이클 레이더 렌더러 (07leader 렌즈 고도화) ─────────────────
+    function renderCycleRadar() {
+      if (!window.CYCLE_DATA) return;
+      const dataMap = window.CYCLE_DATA;
+      const currentData = dataMap[currentCycleIndustry];
+      if (!currentData) return;
+
+      // 1. 업종 선택 탭 바 렌더링
+      const indBar = document.getElementById('cycle-industry-bar');
+      if (indBar) {
+        const indKeys = Object.keys(dataMap);
+        indBar.innerHTML = indKeys.map(k => {
+          const item = dataMap[k];
+          const isActive = (k === currentCycleIndustry);
+          return `
+            <button class="cycle-ind-btn ${isActive ? 'active' : ''}" data-ind="${k}">
+              <span style="font-size: 22px;">${item.icon}</span>
+              <div class="cycle-ind-info">
+                <span class="cycle-ind-name">${item.name}</span>
+                <span class="cycle-ind-badge" style="background:${item.status_color}22; color:${item.status_color}; border:1px solid ${item.status_color}55;">
+                  ${item.status_badge} (${item.current_val} ${item.unit})
+                </span>
+              </div>
+            </button>
+          `;
+        }).join('');
+
+        // 업종 버튼 클릭 이벤트
+        indBar.querySelectorAll('.cycle-ind-btn').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const indKey = e.currentTarget.dataset.ind;
+            if (indKey && indKey !== currentCycleIndustry) {
+              currentCycleIndustry = indKey;
+              renderCycleRadar();
+            }
+          });
+        });
+      }
+
+      // 2. 세부 선종/서브섹터 처리 (예: 해운의 벌크/탱커/컨테이너)
+      const subBar = document.getElementById('cycle-sub-bar');
+      let activeData = currentData;
+
+      if (currentData.has_subsectors && currentData.sub_sectors) {
+        if (subBar) {
+          subBar.style.display = 'flex';
+          const subKeys = Object.keys(currentData.sub_sectors);
+          if (!currentData.sub_sectors[currentShippingSub]) {
+            currentShippingSub = subKeys[0];
+          }
+          subBar.innerHTML = subKeys.map(sk => {
+            const subItem = currentData.sub_sectors[sk];
+            const isSubActive = (sk === currentShippingSub);
+            return `
+              <button class="cycle-sub-btn ${isSubActive ? 'active' : ''}" data-sub="${sk}">
+                ${subItem.name}
+              </button>
+            `;
+          }).join('');
+
+          subBar.querySelectorAll('.cycle-sub-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+              const subKey = e.currentTarget.dataset.sub;
+              if (subKey && subKey !== currentShippingSub) {
+                currentShippingSub = subKey;
+                renderCycleRadar();
+              }
+            });
+          });
+        }
+        activeData = currentData.sub_sectors[currentShippingSub];
+      } else {
+        if (subBar) subBar.style.display = 'none';
+      }
+
+      // 3. 선행지표 헤더 & 배지 갱신
+      const titleEl = document.getElementById('cycle-chart-title');
+      if (titleEl) {
+        const subNameText = (currentData.has_subsectors ? ` — ${activeData.name}` : '');
+        titleEl.innerHTML = `<span>${currentData.icon}</span><span>${currentData.name}${subNameText} : ${activeData.indicator_name} 10년 추이</span>`;
+      }
+      const subEl = document.getElementById('cycle-chart-sub');
+      if (subEl) {
+        const commentText = activeData.comment || currentData.current_comment;
+        subEl.textContent = `핵심 지표: ${activeData.indicator_name} (${activeData.unit}) | ${commentText}`;
+      }
+      const badgeEl = document.getElementById('cycle-chart-badge');
+      if (badgeEl) {
+        badgeEl.innerHTML = `
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 3px;">현재 지표 현황</div>
+          <span class="badge" style="background:${activeData.status_color}22; color:${activeData.status_color}; border:1px solid ${activeData.status_color}66; font-size:13px; font-weight:800; padding: 4px 10px;">
+            ${activeData.current_val.toLocaleString()} ${activeData.unit} (${activeData.status_badge})
+          </span>
+        `;
+      }
+
+      // 4. 메타 정보 박스 갱신 (역사적 침체 밴드 & 손익분기점 & 듀얼 지표 해설)
+      const metaEl = document.getElementById('cycle-chart-meta');
+      if (metaEl) {
+        const bVal = activeData.bottom_band_val ?? (activeData.chart && activeData.chart.bottom_band_val) ?? (currentData.chart && currentData.chart.bottom_band_val) ?? (activeData.historical_bottom && activeData.historical_bottom.max) ?? 0;
+        const bEven = activeData.break_even ?? currentData.break_even ?? 0;
+        const bottomMin = (activeData.historical_bottom && activeData.historical_bottom.min !== undefined)
+          ? activeData.historical_bottom.min
+          : (currentData.historical_bottom && currentData.historical_bottom.min !== undefined)
+            ? currentData.historical_bottom.min
+            : (bVal ? bVal * 0.8 : 0);
+        const bottomMax = (activeData.historical_bottom && activeData.historical_bottom.max !== undefined)
+          ? activeData.historical_bottom.max
+          : (currentData.historical_bottom && currentData.historical_bottom.max !== undefined)
+            ? currentData.historical_bottom.max
+            : bVal;
+        const bottomLabel = (activeData.historical_bottom && activeData.historical_bottom.label)
+          ? activeData.historical_bottom.label
+          : (currentData.historical_bottom && currentData.historical_bottom.label)
+            ? currentData.historical_bottom.label
+            : '역사적 바닥 침체 밴드';
+        
+        let secondaryCommentHtml = '';
+        if (currentData.chart && currentData.chart.secondary) {
+          const sec = currentData.chart.secondary;
+          secondaryCommentHtml = `
+            <div style="font-size: 11.5px; color: #D8B4FE; border-top: 1px dashed var(--border-subtle); padding-top: 6px; margin-top: 4px;">
+              ⚡ <strong>듀얼 지표 분석 (${sec.name}):</strong> ${sec.comment}
+            </div>
+          `;
+        }
+
+        const minStr = typeof bottomMin === 'number' ? bottomMin.toLocaleString() : (bottomMin || '0');
+        const maxStr = typeof bottomMax === 'number' ? bottomMax.toLocaleString() : (bottomMax || '0');
+        const bepStr = typeof bEven === 'number' ? bEven.toLocaleString() : (bEven || '0');
+
+        metaEl.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong style="color: #EF4444;">🔴 역사적 침체 밴드:</strong>
+              <span style="font-family: var(--font-mono); color: #F8FAFC; margin-left:4px;">${minStr} ~ ${maxStr} ${activeData.unit}</span>
+              <span style="color: var(--text-muted); font-size: 11.5px; margin-left: 6px;">(${bottomLabel})</span>
+            </div>
+            <div>
+              <strong style="color: #F59E0B;">🟡 손익분기선(BEP):</strong>
+              <span style="font-family: var(--font-mono); color: #F8FAFC; margin-left:4px;">${bepStr} ${activeData.unit}</span>
+            </div>
+          </div>
+          <div style="font-size: 11.5px; color: var(--text-secondary); border-top: 1px solid var(--border-subtle); padding-top: 6px; margin-top: 2px;">
+            📊 <strong>진단 요약:</strong> ${activeData.comment || currentData.current_comment}
+          </div>
+          ${secondaryCommentHtml}
+        `;
+      }
+
+      // 5. 사이클주 PER 역발상 밸류에이션 판독기 렌더링
+      const valBox = document.getElementById('cycle-valuation-box');
+      if (valBox && currentData.valuation_guide) {
+        const vg = currentData.valuation_guide;
+        valBox.innerHTML = `
+          <div class="cycle-val-row">
+            <span class="cycle-val-label">📍 현재 국면:</span>
+            <span class="cycle-val-content"><strong style="color:${currentData.status_color}; font-size:13px;">${vg.phase}</strong></span>
+          </div>
+          <div class="cycle-val-row">
+            <span class="cycle-val-label">👥 대중의 심리:</span>
+            <span class="cycle-val-content" style="color:#CBD5E1;">${vg.crowd_psychology}</span>
+          </div>
+          <div class="cycle-val-row">
+            <span class="cycle-val-label">🦅 거장의 행동:</span>
+            <span class="cycle-val-content" style="color:#FCD34D; font-weight:600;">${vg.master_action}</span>
+          </div>
+          <div class="cycle-val-trap">
+            ${vg.per_trap}
+          </div>
+        `;
+      }
+
+      // 6. Chart.js 선행지표 차트 렌더링
+      renderCycleChart(activeData, currentData);
+
+      const quoteEl = document.getElementById('cycle-leader-quote');
+      if (quoteEl) {
+        const quoteText = currentData.leader_principle || currentData.leader_quote || '';
+        quoteEl.innerHTML = `<strong>07leader 사이클 원칙 요약:</strong> ${quoteText}`;
+      }
+
+      const checkListContainer = document.getElementById('cycle-checklist-container');
+      if (checkListContainer) {
+        if (!cycleCheckedMap[currentCycleIndustry]) {
+          cycleCheckedMap[currentCycleIndustry] = {};
+        }
+        const state = cycleCheckedMap[currentCycleIndustry];
+
+        checkListContainer.innerHTML = currentData.checklist.map((c, idx) => {
+          const isChecked = !!state[c.id];
+          return `
+            <div class="checklist-item ${isChecked ? 'checked' : ''}" data-check-id="${c.id}">
+              <input type="checkbox" class="checklist-checkbox" id="chk_${c.id}" ${isChecked ? 'checked' : ''}>
+              <label class="checklist-text" for="chk_${c.id}">
+                <strong style="color:${isChecked ? '#10B981' : 'var(--accent-gold)'}; margin-right:4px;">Q${idx + 1}.</strong> ${c.text}
+              </label>
+            </div>
+          `;
+        }).join('');
+
+        // 체크리스트 클릭 인터랙션
+        checkListContainer.querySelectorAll('.checklist-item').forEach(itemEl => {
+          itemEl.addEventListener('click', e => {
+            if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'label') return;
+            const chkBox = itemEl.querySelector('.checklist-checkbox');
+            chkBox.checked = !chkBox.checked;
+            chkBox.dispatchEvent(new Event('change'));
+          });
+
+          const chkBox = itemEl.querySelector('.checklist-checkbox');
+          chkBox.addEventListener('change', e => {
+            const id = itemEl.dataset.checkId;
+            state[id] = e.target.checked;
+            if (e.target.checked) {
+              itemEl.classList.add('checked');
+              const strongTag = itemEl.querySelector('strong');
+              if (strongTag) strongTag.style.color = '#10B981';
+            } else {
+              itemEl.classList.remove('checked');
+              const strongTag = itemEl.querySelector('strong');
+              if (strongTag) strongTag.style.color = 'var(--accent-gold)';
+            }
+          });
+        });
+      }
+
+      // 8. 하단 업종 대표주 10년 체력 검증 테이블 렌더링
+      renderCycleStocksTable(activeData, currentData);
+    }
+
+    // Chart.js 사이클 선행지표 차트 (듀얼 축 지원)
+    function renderCycleChart(activeData, parentData) {
+      const canvas = document.getElementById('cycle-chart-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (cycleChartInstance) {
+        cycleChartInstance.destroy();
+      }
+
+      const chartObj = activeData.chart || parentData.chart;
+      const labels = chartObj.labels;
+      const values = chartObj.values;
+      const bottomBandVal = activeData.bottom_band_val ?? (activeData.chart && activeData.chart.bottom_band_val) ?? (parentData.chart && parentData.chart.bottom_band_val) ?? (activeData.historical_bottom && activeData.historical_bottom.max) ?? 0;
+      const breakEvenVal = activeData.break_even ?? parentData.break_even ?? 0;
+      const sec = (!parentData.has_subsectors && parentData.chart && parentData.chart.secondary) ? parentData.chart.secondary : null;
+
+      const bepLabelStr = typeof breakEvenVal === 'number' ? breakEvenVal.toLocaleString() : (breakEvenVal || '0');
+      const bottomLabelStr = typeof bottomBandVal === 'number' ? bottomBandVal.toLocaleString() : (bottomBandVal || '0');
+
+      const datasets = [
+        {
+          label: `${activeData.indicator_name} (${activeData.unit})`,
+          data: values,
+          borderColor: '#38BDF8',
+          backgroundColor: 'rgba(56, 189, 248, 0.12)',
+          borderWidth: 3,
+          pointBackgroundColor: '#38BDF8',
+          pointBorderColor: '#0B0E14',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          tension: 0.3,
+          fill: true,
+          yAxisID: 'yLeft',
+          order: 2
+        },
+        {
+          label: `손익분기선 (BEP ${bepLabelStr}${activeData.unit})`,
+          data: labels.map(() => breakEvenVal),
+          borderColor: '#F59E0B',
+          borderWidth: 1.8,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          fill: false,
+          yAxisID: 'yLeft',
+          order: 3
+        },
+        {
+          label: `역사적 침체 밴드 (${bottomLabelStr}${activeData.unit} 이하)`,
+          data: labels.map(() => bottomBandVal),
+          borderColor: '#EF4444',
+          borderWidth: 1.8,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: false,
+          yAxisID: 'yLeft',
+          order: 4
+        }
+      ];
+
+      // 듀얼 보조 지표가 있는 경우 우측 Y축으로 추가
+      if (sec) {
+        datasets.unshift({
+          label: `⚡ ${sec.name} (${sec.unit}) [우측 보조축]`,
+          data: sec.values,
+          borderColor: '#C084FC',
+          borderWidth: 2.5,
+          borderDash: [2, 2],
+          pointRadius: 4,
+          pointBackgroundColor: '#C084FC',
+          pointHoverRadius: 6,
+          tension: 0.25,
+          fill: false,
+          yAxisID: 'yRight',
+          order: 1
+        });
+      }
+
+      cycleChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#94A3B8',
+                font: { family: 'Pretendard', size: 11.5 },
+                boxWidth: 14,
+                boxHeight: 10,
+                padding: 10
+              }
+            },
+            tooltip: {
+              backgroundColor: '#1E293B',
+              titleColor: '#F8FAFC',
+              bodyColor: '#CBD5E1',
+              borderColor: '#334155',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: function(context) {
+                  if (context.dataset.yAxisID === 'yRight' && sec) {
+                    return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} ${sec.unit}`;
+                  }
+                  return ` ${context.dataset.label}: ${context.parsed.y.toLocaleString()} ${activeData.unit}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#1E293B' },
+              ticks: { color: '#94A3B8', font: { family: 'Pretendard' } }
+            },
+            yLeft: {
+              type: 'linear',
+              position: 'left',
+              grid: { color: '#1E293B' },
+              ticks: {
+                color: '#38BDF8',
+                font: { family: 'JetBrains Mono' },
+                callback: v => `${v.toLocaleString()} ${activeData.unit}`
+              }
+            },
+            yRight: {
+              type: 'linear',
+              display: !!sec,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: {
+                color: '#C084FC',
+                font: { family: 'JetBrains Mono' },
+                callback: v => sec ? `${v.toLocaleString()} ${sec.unit}` : v
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 업종 대표주 10년 체력 검증 테이블
+    function renderCycleStocksTable(activeData, parentData) {
+      const tbody = document.getElementById('cycle-stocks-tbody');
+      const tableTitle = document.getElementById('cycle-table-title');
+      if (!tbody) return;
+
+      const titleName = activeData.name || parentData.name;
+      const targetCodes = activeData.tickers || parentData.tickers || [];
+
+      if (tableTitle) {
+        tableTitle.textContent = `${parentData.icon} ${titleName} 대표주 10년 체력 검증 (${targetCodes.length}개 종목)`;
+      }
+
+      let matchedStocks = targetCodes.map(code => {
+        return allData.find(d => d.code.toUpperCase() === code.toUpperCase() || d.code === code);
+      }).filter(Boolean);
+
+      if (currentCountry !== 'ALL') {
+        matchedStocks = matchedStocks.filter(d => d.country === currentCountry);
+      }
+
+      if (matchedStocks.length === 0) {
+        const countryName = currentCountry === 'KR' ? '한국주식' : '미국주식';
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:35px; color:var(--text-muted); font-size:13px;">
+          선택하신 시장(<strong>${countryName}</strong>)에 속한 대표 종목이 이 업종/선종에 없습니다.<br>
+          <span style="color:var(--accent-gold); font-size:12px; margin-top:4px; display:inline-block;">좌측 상단의 '🌐 전체(통합)' 탭을 클릭하시면 글로벌 대표주를 함께 확인하실 수 있습니다.</span>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = matchedStocks.map(d => {
+        const isUs = (d.country === 'US');
+        const priceStr = isUs ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
+        const marcapStr = isUs ? `$${d.marcap_usd}B` : `${d.marcap.toLocaleString()}억`;
+        const passedMasters = getPassedMasters(d);
+
+        const passBadges = passedMasters.length > 0
+          ? passedMasters.map(m => `<span class="badge" style="background:#1E293B; color:#CBD5E1; padding:1px 5px; font-size:10.5px; margin-right:2px;">${m}</span>`).join('')
+          : '<span style="color:#64748B; font-size:11px;">-</span>';
+
+        const lossBadge = (d.loss_cnt === 0)
+          ? `<span class="badge badge-pass">10년 무적자</span>`
+          : `<span class="badge badge-fail">적자 ${d.loss_cnt}회</span>`;
+
+        return `
+          <tr data-code="${d.code}" style="cursor:pointer;">
+            <td style="padding:10px 12px; font-weight:700; color:var(--text-primary);">
+              ${d.name} <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">(${d.code})</span>
+            </td>
+            <td style="padding:10px 12px; font-size:11.5px; color:var(--text-secondary);">${d.market}</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${priceStr}</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${marcapStr}</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${d.per}배</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${d.pbr}배</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono); color:${d.dy >= 4.0 ? '#10B981' : 'inherit'}; font-weight:${d.dy >= 4.0 ? '700' : '400'};">${d.dy}%</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${renderTotalYield(d)}</td>
+            <td style="padding:10px 12px;">${lossBadge}</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono); color:${d.debt_ratio <= 100 ? '#10B981' : 'inherit'};">${d.debt_ratio}%</td>
+            <td style="padding:10px 12px;">
+              <div style="display:flex; flex-wrap:wrap; gap:3px; max-width:240px;">
+                ${passBadges}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // 행 클릭 시 10년 재무 모달 오픈 연동
+      tbody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', () => {
+          const code = tr.dataset.code;
+          const target = allData.find(x => x.code === code);
+          if (target) {
+            openDetailModal(target);
+          }
+        });
+      });
+    }
+
+    // 거장 뷰 업데이트
+    function updateMasterView(masterKey) {
+      const bannerEl = document.getElementById('master-banner');
+      const controlEl = document.querySelector('.control-panel');
+      const tableContainerEl = document.querySelector('.table-container');
+      const cycleRadarEl = document.getElementById('cycle-radar-view');
+
+      const comboPanelEl = document.getElementById('custom-combo-panel');
+      if (comboPanelEl) {
+        comboPanelEl.style.display = (masterKey === 'multipass') ? 'block' : 'none';
+      }
+
+      if (masterKey === 'cycle') {
+        if (bannerEl) bannerEl.style.display = 'none';
+        if (controlEl) controlEl.style.display = 'none';
+        if (tableContainerEl) tableContainerEl.style.display = 'none';
+        if (comboPanelEl) comboPanelEl.style.display = 'none';
+        if (cycleRadarEl) {
+          cycleRadarEl.style.display = 'flex';
+          renderCycleRadar();
+        }
+        return;
+      }
+
+      // 일반 거장 및 다중 거장 / 전종목 뷰
+      if (cycleRadarEl) cycleRadarEl.style.display = 'none';
+      if (bannerEl) bannerEl.style.display = 'flex';
+      if (controlEl) controlEl.style.display = 'flex';
+      if (tableContainerEl) tableContainerEl.style.display = 'block';
+
+      const cfg = MASTER_CONFIG[masterKey];
+      if (!cfg) return;
+
+      document.getElementById('banner-title').textContent = cfg.bannerTitle;
+      document.getElementById('banner-desc').textContent = cfg.bannerDesc;
+      document.getElementById('b-stat-1-label').textContent = cfg.statLabel;
+
+      // 판정 기준 설명 가이드 박스 렌더링
+      const guideBox = document.getElementById('verdict-guide-box');
+      if (guideBox && cfg.criteria) {
+        guideBox.innerHTML = cfg.criteria.map(c => `
+          <div class="guide-item">
+            <span class="guide-badge" style="background:${c.color}22; color:${c.color}; border:1px solid ${c.color}55;">${c.badge}</span>
+            <span class="guide-desc">${c.desc}</span>
+          </div>
+        `).join('');
+      }
+
+      // 판정 드롭다운 채우기
+      const verdictSelect = document.getElementById('verdict-filter');
+      verdictSelect.innerHTML = '<option value="ALL">전체 판정</option>' +
+        cfg.verdicts.map(v => `<option value="${v}">${v}</option>`).join('');
+
+      renderTableHeader();
+      renderTable();
+    }
+
+    // 테이블 헤더 렌더링
+    function renderTableHeader() {
+      const cfg = MASTER_CONFIG[currentMaster];
+      const thead = document.getElementById('table-header-row');
+      
+      const baseCols = [
+        { key: 'rank', label: '#' },
+        { key: 'name', label: '종목명' },
+        { key: 'market', label: '시장' },
+        { key: 'price', label: '현재가' },
+        { key: 'marcap', label: '시총' },
+        { key: 'per', label: 'PER' },
+        { key: 'pbr', label: 'PBR' },
+        { key: 'dy', label: '배당' },
+        { key: 'total_yield', label: '총환원' },
+        { key: 'burn_rate', label: '소각' },
+        { key: 'dps_cagr_3y', label: '배당성장' }
+      ];
+
+      const allCols = [...baseCols, ...cfg.customCols];
+      
+      thead.innerHTML = allCols.map(c => `
+        <th data-col="${c.key}" class="${sortColumn === c.key ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : ''}">
+          ${c.label}
+        </th>
+      `).join('');
+
+      // 헤더 정렬 클릭 이벤트
+      thead.querySelectorAll('th').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.col;
+          if (sortColumn === col) {
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortColumn = col;
+            sortOrder = 'desc';
+          }
+          renderTableHeader();
+          renderTable();
+        });
+      });
+    }
+
+    // 총환원율(%) 셀 렌더러
+    function renderTotalYield(d) {
+      const ty = d.total_yield !== undefined ? d.total_yield : d.dy;
+      const by = d.buyback_yield || 0;
+      const tooltip = `총환원율 ${ty}% (배당 ${d.dy}% + 자사주순매입 ${by}%)`;
+      if (ty >= 8.0) {
+        return `<strong style="color:#F59E0B;" title="${tooltip}">👑 ${ty}%</strong>`;
+      }
+      if (ty >= 5.0) {
+        return `<strong style="color:#10B981;" title="${tooltip}">🚀 ${ty}%</strong>`;
+      }
+      if (ty >= 3.0) {
+        return `<span style="color:#34D399; font-weight:600;" title="${tooltip}">${ty}%</span>`;
+      }
+      if (ty > 0) {
+        return `<span style="color:#CBD5E1;" title="${tooltip}">${ty}%</span>`;
+      }
+      return `<span style="color:#64748B;" title="${tooltip}">0%</span>`;
+    }
+
+    // 소각률(%) 셀 렌더러
+    function renderBurnRate(d) {
+      const br = d.burn_rate;
+      if (br === undefined || br === null) return '-';
+      const streak = d.burn_streak || 0;
+      const streakBadge = streak >= 2 ? `<span style="display:inline-block; margin-left:4px; font-size:10.5px; background:rgba(245,158,11,0.2); color:#F59E0B; padding:1px 5px; border-radius:3px; font-weight:700;">${streak}년연속</span>` : '';
+      const tooltip = `최근 1개년 유통주식수 변화: ${br > 0 ? '+' + br + '% 소각' : (br < 0 ? br + '% 희석' : '변동없음')}${streak >= 2 ? ' (' + streak + '개년 연속 소각 중)' : ''}`;
+      if (br >= 2.0) {
+        return `<span class="badge" style="background:rgba(16,185,129,0.2); color:#34D399; border:1px solid rgba(16,185,129,0.4); font-weight:800;" title="${tooltip}">🔥 +${br}%</span>${streakBadge}`;
+      }
+      if (br > 0.0) {
+        return `<span style="color:#10B981; font-weight:700;" title="${tooltip}">+${br}%</span>${streakBadge}`;
+      }
+      if (br === 0.0) {
+        return `<span style="color:#64748B;" title="${tooltip}">0%</span>`;
+      }
+      return `<span style="color:#94A3B8; font-size:11px;" title="${tooltip}">${br}%</span>`;
+    }
+
+    // 배당성장률 셀 렌더러
+    function renderDividendGrowth(d) {
+      const cagr = d.dps_cagr_3y;
+      if (cagr === undefined || cagr === null) return '-';
+      const curr = d.country === 'US' ? '$' : '원';
+      const tooltip = d.dps_start_yr ? `${d.dps_start_yr}년 ${curr === '$' ? '$' : ''}${d.dps_start_val.toLocaleString()}${curr === '원' ? '원' : ''} → ${d.dps_end_yr}년 ${curr === '$' ? '$' : ''}${d.dps_end_val.toLocaleString()}${curr === '원' ? '원' : ''}` : '';
+      
+      if (cagr === 999.0) {
+        return `<span class="badge" style="background:rgba(37,99,235,0.2); color:#60A5FA; border:1px solid rgba(59,130,246,0.4);" title="${tooltip}">신규배당</span>`;
+      }
+      if (cagr === -100.0) {
+        return `<span style="color:#EF4444; font-size:12px;" title="${tooltip}">배당중단</span>`;
+      }
+      if (cagr >= 15.0) {
+        return `<strong style="color:#10B981;" title="${tooltip}">🔥 +${cagr}%</strong>`;
+      }
+      if (cagr > 0) {
+        return `<span style="color:#10B981; font-weight:600;" title="${tooltip}">+${cagr}%</span>`;
+      }
+      if (cagr === 0.0) {
+        return d.dy > 0 ? `<span style="color:#94A3B8;" title="${tooltip}">동결 0.0%</span>` : `<span style="color:#64748B;">무배당</span>`;
+      }
+      return `<span style="color:#F87171;" title="${tooltip}">${cagr}%</span>`;
+    }
+
+    // 테이블 본문 렌더링
+    function renderTable() {
+      const cfg = MASTER_CONFIG[currentMaster];
+      const search = document.getElementById('search-input').value.trim().toLowerCase();
+      const market = document.getElementById('market-filter').value;
+      const verdict = document.getElementById('verdict-filter').value;
+      const cagrFilter = document.getElementById('cagr-filter').value;
+      const yieldFilter = document.getElementById('yield-filter') ? document.getElementById('yield-filter').value : 'ALL';
+      const minMarcap = parseInt(document.getElementById('marcap-slider').value);
+      const maxPer = parseFloat(document.getElementById('per-slider').value);
+      const minDy = parseFloat(document.getElementById('dy-slider').value);
+
+      // 필터링
+      let filtered = allData.filter(d => {
+        // 국가/시장 필터 (한국 / 미국 / 전체)
+        if (currentCountry !== 'ALL' && d.country !== currentCountry) return false;
+
+        // 세부 검색 (종목명, 티커코드)
+        if (search && !d.name.toLowerCase().includes(search) && !d.code.toLowerCase().includes(search)) return false;
+        if (market !== 'ALL' && d.market !== market) return false;
+
+        // 전종목 탐색기에서 직접 검색어(search)를 입력했을 때는 슬라이더 한도에 걸려 종목이 누락되지 않도록 바이패스
+        const isDirectSearch = (currentMaster === 'all' && search.length > 0);
+        if (!isDirectSearch) {
+          if (d.marcap < minMarcap) return false;
+          if (d.per > maxPer) return false;
+          if (d.dy < minDy) return false;
+        }
+
+        // 3년 배당성장률 필터
+        if (cagrFilter === 'GROWTH' && (d.dps_cagr_3y <= 0 || d.dps_cagr_3y === 999.0)) return false;
+        if (cagrFilter === 'HIGH_GROWTH' && (d.dps_cagr_3y < 10.0 || d.dps_cagr_3y === 999.0)) return false;
+        if (cagrFilter === 'SUPER_GROWTH' && (d.dps_cagr_3y < 20.0 || d.dps_cagr_3y === 999.0)) return false;
+
+        // 총환원 & 소각 필터
+        const ty = d.total_yield !== undefined ? d.total_yield : d.dy;
+        const br = d.burn_rate || 0;
+        const streak = d.burn_streak || 0;
+        if (yieldFilter === 'YIELD_3' && ty < 3.0) return false;
+        if (yieldFilter === 'YIELD_5' && ty < 5.0) return false;
+        if (yieldFilter === 'YIELD_8' && ty < 8.0) return false;
+        if (yieldFilter === 'BURN_ONLY' && br <= 0) return false;
+        if (yieldFilter === 'BURN_STRONG' && br < 2.0) return false;
+        if (yieldFilter === 'BURN_STREAK_3' && streak < 3) return false;
+        if (yieldFilter === 'BURN_STREAK_5' && streak < 5) return false;
+
+        if (currentMaster === 'all') {
+          // 전종목 자유 탐색기
+          if (verdict !== 'ALL') {
+            const pCnt = getPassedMasters(d).length;
+            if (verdict === '거장 5인+ 통과' && pCnt < 5) return false;
+            if (verdict === '거장 3인+ 통과' && pCnt < 3) return false;
+            if (verdict === '거장 2인+ 통과' && pCnt < 2) return false;
+            if (verdict === '거장 1인+ 통과' && pCnt < 1) return false;
+            if (verdict === '거장 미통과(자유탐색)' && pCnt !== 0) return false;
+          }
+        } else if (currentMaster === 'multipass') {
+          const pMasters = getPassedMasters(d);
+          const pCnt = pMasters.length;
+
+          if (selectedCustomMasters && selectedCustomMasters.size > 0) {
+            const req = Array.from(selectedCustomMasters);
+            if (customMatchMode === 'AND') {
+              if (!req.every(m => pMasters.includes(m))) return false;
+            } else {
+              if (!req.some(m => pMasters.includes(m))) return false;
+            }
+          } else {
+            if (verdict === 'ALL') {
+              if (pCnt < 2) return false;
+            } else {
+              if (cfg.getVerdict(d) !== verdict) return false;
+            }
+          }
+        } else {
+          if (verdict !== 'ALL' && cfg.getVerdict(d) !== verdict) return false;
+        }
+        return true;
+      });
+
+      // 정렬
+      filtered.sort((a, b) => {
+        let valA = a[sortColumn];
+        let valB = b[sortColumn];
+        if (sortColumn === 'total_yield') {
+          valA = a.total_yield !== undefined ? a.total_yield : a.dy;
+          valB = b.total_yield !== undefined ? b.total_yield : b.dy;
+        }
+        if (sortColumn === 'burn_rate') {
+          valA = a.burn_rate !== undefined && a.burn_rate !== null ? a.burn_rate : -999;
+          valB = b.burn_rate !== undefined && b.burn_rate !== null ? b.burn_rate : -999;
+        }
+        if (sortColumn === 'dps_cagr_3y') {
+          valA = a.dps_cagr_3y === 999.0 ? 500 : (a.dps_cagr_3y ?? -999);
+          valB = b.dps_cagr_3y === 999.0 ? 500 : (b.dps_cagr_3y ?? -999);
+        }
+        if (sortColumn === 'pass_count') { valA = getPassedMasters(a).length; valB = getPassedMasters(b).length; }
+        
+        // 거장별 판정 정렬 가중치 (우수한 판정이 상단에 오도록 수치화)
+        if (sortColumn === 'buffett_verdict') {
+          const m = { '통과': 3, '대기': 2, '탈락': 1 };
+          valA = m[a.buffett?.verdict] || 0;
+          valB = m[b.buffett?.verdict] || 0;
+        }
+        if (sortColumn === 'lynch_verdict') {
+          const m = { '추적 가치': 3, '검증 필요': 2, '관찰만': 1 };
+          valA = m[a.lynch?.verdict] || 0;
+          valB = m[b.lynch?.verdict] || 0;
+        }
+        if (sortColumn === 'oil_grade') {
+          const m = { 'A (적극 매수)': 4, 'B (매수 고려)': 3, 'C (보유만)': 2, 'D (비추천)': 1 };
+          valA = m[a.oil?.grade] || 0;
+          valB = m[b.oil?.grade] || 0;
+        }
+        if (sortColumn === 'oil_score') { valA = a.oil?.score || 0; valB = b.oil?.score || 0; }
+        if (sortColumn === 'vip_verdict') {
+          const m = { '적극 편입': 4, '편입 검토': 3, '관찰 대상': 2, '편입 불가': 1 };
+          valA = m[a.vip?.verdict] || 0;
+          valB = m[b.vip?.verdict] || 0;
+        }
+        if (sortColumn === 'leader_verdict') {
+          const m = { '길목 선취매': 4, '분할 매집': 3, '관찰 대기': 2, '매수 금지': 1 };
+          valA = m[a.leader?.verdict] || 0;
+          valB = m[b.leader?.verdict] || 0;
+        }
+        if (sortColumn === 'leader_score') { valA = a.leader?.score || 0; valB = b.leader?.score || 0; }
+        if (sortColumn === 'kiyohara_verdict') {
+          const m = { '넷넷 초저평가': 4, '순현금 우량': 3, '현금 보통': 2, '순부채 차입': 1 };
+          valA = m[a.kiyohara?.verdict] || 0;
+          valB = m[b.kiyohara?.verdict] || 0;
+        }
+        if (sortColumn === 'kiyohara_net_cash') { valA = a.kiyohara?.net_cash || 0; valB = b.kiyohara?.net_cash || 0; }
+        if (sortColumn === 'kiyohara_ncr') { valA = a.kiyohara?.ncr || 0; valB = b.kiyohara?.ncr || 0; }
+        if (sortColumn === 'kiyohara_cn_per') { valA = a.kiyohara?.cn_per || 999; valB = b.kiyohara?.cn_per || 999; }
+        if (sortColumn === 'siegel_verdict') {
+          const m = { 'DGRW 최우량': 4, '배당퀄리티 우량': 3, '배당 유지': 2, '가치함정/비추천': 1 };
+          valA = m[a.siegel?.verdict] || 0;
+          valB = m[b.siegel?.verdict] || 0;
+        }
+        if (sortColumn === 'siegel_score') { valA = a.siegel?.score || 0; valB = b.siegel?.score || 0; }
+        if (sortColumn === 'siegel_roa') { valA = a.siegel?.roa || 0; valB = b.siegel?.roa || 0; }
+
+        // 마크 미너비니 컬럼 정렬
+        if (sortColumn === 'minervini_verdict') {
+          const m = { '🚀 2단계 상승': 3, '📈 추세 형성': 2, '기준 미달': 1 };
+          valA = m[a.minervini?.verdict] || 0;
+          valB = m[b.minervini?.verdict] || 0;
+        }
+        if (sortColumn === 'minervini_score') {
+          valA = a.minervini?.score ?? -999;
+          valB = b.minervini?.score ?? -999;
+        }
+        if (sortColumn === 'minervini_rs') {
+          valA = a.minervini?.rs ?? -999;
+          valB = b.minervini?.rs ?? -999;
+        }
+        if (sortColumn === 'minervini_eps') {
+          valA = a.minervini?.eps_growth ?? -999999;
+          valB = b.minervini?.eps_growth ?? -999999;
+        }
+        if (sortColumn === 'minervini_theme') {
+          valA = a.minervini?.theme || '';
+          valB = b.minervini?.theme || '';
+        }
+
+        if (typeof valA === 'string') return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return sortOrder === 'asc' ? (valA - valB) : (valB - valA);
+      });
+
+      // 상단 배너 통계 갱신
+      updateBannerStats(filtered);
+
+      const tbody = document.getElementById('table-body');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 40px; color: var(--text-muted);">조건에 맞는 종목이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.slice(0, 300).map((d, idx) => {
+        const customTds = cfg.customCols.map(c => `<td>${c.render(d)}</td>`).join('');
+        const priceStr = d.country === 'US' ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
+        const marcapStr = d.country === 'US' ? `<span style="color:#38BDF8; font-weight:700;">$${d.marcap_usd}B</span>` : `${d.marcap.toLocaleString()}억`;
+        const marketClass = d.market ? `market-${d.market.toLowerCase()}` : '';
+
+        return `
+          <tr data-code="${d.code}">
+            <td>${idx + 1}</td>
+            <td>
+              <div class="cell-name">
+                <span>${d.name}</span>
+                <span class="cell-code">${d.code}</span>
+              </div>
+            </td>
+            <td><span class="cell-market ${marketClass}">${d.market}</span></td>
+            <td style="font-weight:600;">${priceStr}</td>
+            <td>${marcapStr}</td>
+            <td>${d.per}</td>
+            <td>${d.pbr}</td>
+            <td>${d.dy}%</td>
+            <td>${renderTotalYield(d)}</td>
+            <td>${renderBurnRate(d)}</td>
+            <td>${renderDividendGrowth(d)}</td>
+            ${customTds}
+          </tr>
+        `;
+      }).join('');
+
+      // 행 클릭 이벤트
+      tbody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', () => {
+          const code = tr.dataset.code;
+          const item = allData.find(x => x.code === code);
+          if (item) openDetailModal(item);
+        });
+      });
+    }
+
+    // 배너 통계 계산
+    function updateBannerStats(list) {
+      const cfg = MASTER_CONFIG[currentMaster];
+      let topCount = 0;
+      if (currentMaster === 'all') topCount = list.length;
+      if (currentMaster === 'buffett') topCount = list.filter(x => x.buffett.verdict === '통과').length;
+      if (currentMaster === 'lynch') topCount = list.filter(x => x.lynch.verdict === '추적 가치').length;
+      if (currentMaster === 'oil') topCount = list.filter(x => x.oil.grade.startsWith('A') || x.oil.grade.startsWith('B')).length;
+      if (currentMaster === 'vip') topCount = list.filter(x => x.vip.verdict === '적극 편입').length;
+      if (currentMaster === 'leader') topCount = list.filter(x => x.leader.verdict === '길목 선취매').length;
+      if (currentMaster === 'kiyohara') topCount = list.filter(x => x.kiyohara.verdict === '넷넷 초저평가' || x.kiyohara.verdict === '순현금 우량').length;
+      if (currentMaster === 'siegel') topCount = list.filter(x => x.siegel && (x.siegel.verdict === 'DGRW 최우량' || x.siegel.verdict === '배당퀄리티 우량')).length;
+      if (currentMaster === 'minervini') topCount = list.filter(x => x.minervini && x.minervini.verdict === '🚀 2단계 상승').length;
+      if (currentMaster === 'multipass') {
+        if (selectedCustomMasters && selectedCustomMasters.size > 0) {
+          const names = Array.from(selectedCustomMasters).join(' + ');
+          const modeLabel = customMatchMode === 'AND' ? '동시 통과' : '교차 통과';
+          document.getElementById('banner-title').textContent = `🎯 [${names}] ${modeLabel} 스크리너`;
+          document.getElementById('b-stat-1-label').textContent = `${modeLabel} 종목`;
+          topCount = list.length;
+        } else {
+          document.getElementById('banner-title').textContent = cfg.bannerTitle;
+          document.getElementById('b-stat-1-label').textContent = cfg.statLabel;
+          topCount = list.filter(x => getPassedMasters(x).length >= 2).length;
+        }
+      }
+
+      document.getElementById('b-stat-1-val').textContent = topCount.toLocaleString();
+
+      if (list.length > 0) {
+        const avgDy = (list.reduce((acc, x) => acc + x.dy, 0) / list.length).toFixed(1);
+        const avgPer = (list.reduce((acc, x) => acc + (x.per < 100 ? x.per : 0), 0) / list.length).toFixed(1);
+        document.getElementById('b-stat-dy').textContent = `${avgDy}%`;
+        document.getElementById('b-stat-per').textContent = `${avgPer}배`;
+      } else {
+        document.getElementById('b-stat-dy').textContent = '0%';
+        document.getElementById('b-stat-per').textContent = '0배';
+      }
+    }
+
+    // 배지 렌더러
+    function renderBadge(text) {
+      if (!text) return '-';
+      if (text.includes('통과') || text.includes('추적') || text.includes('적극') || text.includes('길목') || text.includes('최우량') || text.includes('넷넷') || text.startsWith('A') || text.includes('2단계 상승')) {
+        return `<span class="badge badge-pass">${text}</span>`;
+      }
+      if (text.includes('대기') || text.includes('검증') || text.includes('고려') || text.includes('편입 검토') || text.includes('분할') || text.includes('우량') || text.startsWith('B') || text.includes('추세 형성')) {
+        return `<span class="badge badge-wait">${text}</span>`;
+      }
+      if (text.includes('보통') || text.includes('유지') || text.includes('관찰') || text.startsWith('C')) {
+        return `<span class="badge badge-c">${text}</span>`;
+      }
+      return `<span class="badge badge-fail">${text}</span>`;
+    }
+
+    // ── 상세 모달 오픈 ─────────────────────────
+    function openDetailModal(d) {
+      document.getElementById('m-name-code').textContent = `${d.name} (${d.code})`;
+      
+      const cagr = d.dps_cagr_3y;
+      let cagrStr = '-';
+      if (cagr === 999.0) cagrStr = '신규배당';
+      else if (cagr === -100.0) cagrStr = '배당중단';
+      else if (cagr > 0) cagrStr = `+${cagr}%/연`;
+      else if (cagr === 0.0) cagrStr = d.dy > 0 ? '동결' : '무배당';
+      else if (cagr < 0) cagrStr = `${cagr}%/연`;
+
+      const priceStr = d.country === 'US' ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
+      const marcapStr = d.country === 'US' ? `$${d.marcap_usd}B (약 ${d.marcap.toLocaleString()}억원)` : `시가총액 ${d.marcap.toLocaleString()}억원`;
+      const curr = d.country === 'US' ? '$' : '원';
+
+      const totalYieldStr = d.total_yield !== undefined ? `${d.total_yield}%` : `${d.dy}%`;
+      const burnRateStr = d.burn_rate !== undefined ? `${d.burn_rate > 0 ? '+' : ''}${d.burn_rate}%` : '-';
+
+      document.getElementById('m-meta-line').textContent = 
+        `${d.market} (${d.country === 'US' ? '미국' : '한국'}) | 현재가 ${priceStr} | ${marcapStr} | PER ${d.per}배 | PBR ${d.pbr}배 | 배당수익률 ${d.dy}% | 총환원율 ${totalYieldStr} | 1년 소각률 ${burnRateStr} | 3년배당성장 ${cagrStr} | 10년평균 ROE ${d.roe}%`;
+
+      // 차트 상단 배당성장 배지
+      const badgeEl = document.getElementById('m-cagr-badge');
+      if (cagr === 999.0) {
+        badgeEl.innerHTML = `<span class="badge" style="background:rgba(37,99,235,0.2); color:#60A5FA; border:1px solid rgba(59,130,246,0.4);">✨ 3개년 신규 배당 개시</span>`;
+      } else if (cagr > 0) {
+        const sValStr = curr === '$' ? `$${d.dps_start_val}` : `${d.dps_start_val.toLocaleString()}원`;
+        const eValStr = curr === '$' ? `$${d.dps_end_val}` : `${d.dps_end_val.toLocaleString()}원`;
+        badgeEl.innerHTML = `<span class="badge" style="background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.35);">📈 3년 배당성장: +${cagr}%/연 (${d.dps_start_yr}년 ${sValStr} → ${d.dps_end_yr}년 ${eValStr})</span>`;
+      } else if (cagr === 0.0 && d.dy > 0) {
+        const eValStr = curr === '$' ? `$${d.dps_end_val}` : `${d.dps_end_val.toLocaleString()}원`;
+        badgeEl.innerHTML = `<span class="badge" style="background:#1E293B; color:#94A3B8;">⏸️ 3년 배당 동결 (${eValStr} 유지)</span>`;
+      } else if (cagr < 0 && cagr > -100.0) {
+        const sValStr = curr === '$' ? `$${d.dps_start_val}` : `${d.dps_start_val.toLocaleString()}원`;
+        const eValStr = curr === '$' ? `$${d.dps_end_val}` : `${d.dps_end_val.toLocaleString()}원`;
+        badgeEl.innerHTML = `<span class="badge" style="background:rgba(239,68,68,0.15); color:#EF4444;">📉 3년 배당 삭감: ${cagr}%/연 (${d.dps_start_yr}년 ${sValStr} → ${d.dps_end_yr}년 ${eValStr})</span>`;
+      } else {
+        badgeEl.innerHTML = '';
+      }
+
+      // 8대 거장 평가 카드 그리드 채우기
+      const evalGrid = document.getElementById('eval-grid');
+      const netCashDisplay = d.country === 'US' ? `$${d.kiyohara.net_cash_usd_b}B` : `${d.kiyohara.net_cash.toLocaleString()}억`;
+      evalGrid.innerHTML = `
+        <div class="eval-card">
+          <div class="eval-master">🎩 워런 버핏</div>
+          <div class="eval-verdict">${renderBadge(d.buffett.verdict)}</div>
+          <div class="eval-desc">적자 ${d.buffett.loss_cnt}회 | 관문 ${d.buffett.pass_cnt}/5 | 안전마진 ${d.buffett.safety_margin}%</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">🔍 피터 린치</div>
+          <div class="eval-verdict">${renderBadge(d.lynch.verdict)}</div>
+          <div class="eval-desc">${d.lynch.type} | PEG ${d.lynch.peg < 50 ? d.lynch.peg : '-'} | PEGY ${d.lynch.pegy} | 성장 ${d.lynch.eps_cagr}%</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">🛢️ 오일전문가</div>
+          <div class="eval-verdict">${renderBadge(d.oil.grade)}</div>
+          <div class="eval-desc">${d.oil.score}점 | 총환원율 ${totalYieldStr} | 소각률 ${burnRateStr} | ${d.has_burned ? '소각실적보유' : '미소각'}</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">🏛️ VIP 가치</div>
+          <div class="eval-verdict">${renderBadge(d.vip.verdict)}</div>
+          <div class="eval-desc">${d.vip.type} (${d.vip.position}) | 2단점프 여력 ${d.vip.upside}%</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">🏗️ 07leader</div>
+          <div class="eval-verdict">${renderBadge(d.leader.verdict)}</div>
+          <div class="eval-desc">${d.leader.score}점 | ${d.leader.debt_down ? '부채3년감소' : '부채정체'} | PBR ${d.pbr}</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">🍶 기요하라 다쓰로</div>
+          <div class="eval-verdict">${renderBadge(d.kiyohara.verdict)}</div>
+          <div class="eval-desc">순현금 ${netCashDisplay} | NCR ${d.kiyohara.ncr}% | 현금중립PER ${d.kiyohara.cn_per < 0 ? '음수('+d.kiyohara.cn_per+')' : d.kiyohara.cn_per+'배'}</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">📚 제러미 시겔</div>
+          <div class="eval-verdict">${renderBadge(d.siegel ? d.siegel.verdict : '-')}</div>
+          <div class="eval-desc">DGRW ${d.siegel ? d.siegel.score : 0}점 | ROA ${d.siegel ? d.siegel.roa : 0}% | 성향 ${d.payout}%</div>
+        </div>
+        <div class="eval-card">
+          <div class="eval-master">⚡ 마크 미너비니</div>
+          <div class="eval-verdict">${renderBadge(d.minervini ? d.minervini.verdict : '기준 미달')}</div>
+          <div class="eval-desc">${(d.minervini && d.minervini.passed) ? `종합 ${d.minervini.score}점 | RS ${d.minervini.rs} | EPS ${d.minervini.eps_growth}% | ${d.minervini.theme || '-'}` : '추세 미형성/기준 미달'}</div>
+        </div>
+      `;
+
+      // 10개년 재무 시계열 표 렌더링
+      const sTable = document.getElementById('series-table');
+      const yrs = d.years;
+      const opUnit = d.country === 'US' ? '억 달러' : '억원';
+      
+      const burnRow = (d.burn_series && d.burn_series.length > 0) ? `
+        <tr>
+          <td>주식 소각률 (%)</td>
+          ${d.burn_series.map(v => `<td style="${v > 0 ? 'color:#10B981; font-weight:700;' : (v < 0 ? 'color:#94A3B8;' : '')}">${v > 0 ? '+' + v + '%' : (v < 0 ? v + '%' : '0%')}</td>`).join('')}
+        </tr>
+      ` : '';
+
+      const buybackRow = (d.buyback_series && d.buyback_series.length > 0) ? `
+        <tr>
+          <td>자사주 순매입 ($B)</td>
+          ${d.buyback_series.map(v => `<td style="${v > 0 ? 'color:#38BDF8; font-weight:600;' : ''}">$${v}B</td>`).join('')}
+        </tr>
+      ` : '';
+
+      sTable.innerHTML = `
+        <thead>
+          <tr>
+            <th>항목</th>
+            ${yrs.map(y => `<th>${y}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>주당배당금 (DPS, ${curr})</td>
+            ${d.dps_series.map(v => `<td style="color:#10B981; font-weight:600;">${curr === '$' ? '$' : ''}${v.toLocaleString()}${curr === '원' ? '원' : ''}</td>`).join('')}
+          </tr>
+          <tr>
+            <td>주당순이익 (EPS, ${curr})</td>
+            ${d.eps_series.map(v => `<td>${curr === '$' ? '$' : ''}${v.toLocaleString()}${curr === '원' ? '원' : ''}</td>`).join('')}
+          </tr>
+          <tr>
+            <td>배당성향 (%)</td>
+            ${d.payout_series.map(v => `<td>${v}%</td>`).join('')}
+          </tr>
+          ${burnRow}
+          ${buybackRow}
+          <tr>
+            <td>영업이익 (${opUnit})</td>
+            ${d.op_series.map(v => `<td style="${v <= 0 ? 'color:#EF4444;' : ''}">${v.toLocaleString()}</td>`).join('')}
+          </tr>
+          <tr>
+            <td>ROE (%)</td>
+            ${d.roe_series.map(v => `<td>${v}%</td>`).join('')}
+          </tr>
+        </tbody>
+      `;
+
+      // 현재 모달 아이템 저장 및 차트 그리기
+      currentModalItem = d;
+      renderModalChart(d);
+
+      // 모달 활성화
+      document.getElementById('detail-modal').classList.add('active');
+    }
+
+    // Chart.js 모달 차트 렌더링 (배당/EPS vs 주식수/소각률 듀얼 모드)
+    function renderModalChart(d) {
+      const canvas = document.getElementById('main-detail-chart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      const isUs = (d.country === 'US');
+      const curr = isUs ? '$' : '원';
+      const legendBox = document.getElementById('chart-legend-box');
+
+      if (currentChartTab === 'shares_burn') {
+        // [모드 2] 유통주식수 & 연간 소각률 차트
+        legendBox.innerHTML = `
+          <div class="legend-item"><div class="dot-bar" style="background:#10B981;"></div><span>연간 소각률(% 막대)</span></div>
+          <div class="legend-item"><div class="dot-line" style="background:#A855F7;"></div><span>총 유통주식수(억 주 꺾은선)</span></div>
+        `;
+
+        const burnData = d.burn_series && d.burn_series.length > 0 ? d.burn_series : d.years.map(() => 0);
+        const sharesRaw = d.shares_series && d.shares_series.length > 0 ? d.shares_series : [];
+        const sharesData = sharesRaw.map(v => v ? Number((v / 1e8).toFixed(2)) : null);
+
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: d.years.map(y => `${y}년`),
+            datasets: [
+              {
+                type: 'bar',
+                label: '연간 소각률',
+                data: burnData,
+                backgroundColor: burnData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(239, 68, 68, 0.75)'),
+                borderColor: burnData.map(v => v >= 0 ? '#10B981' : '#EF4444'),
+                borderWidth: 1,
+                borderRadius: 4,
+                yAxisID: 'yBurn',
+                order: 2
+              },
+              {
+                type: 'line',
+                label: '총 유통주식수',
+                data: sharesData,
+                borderColor: '#A855F7',
+                backgroundColor: 'rgba(168, 85, 247, 0.15)',
+                borderWidth: 3,
+                pointBackgroundColor: '#A855F7',
+                pointRadius: 4,
+                tension: 0.25,
+                yAxisID: 'yShares',
+                order: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#1E293B',
+                titleColor: '#F8FAFC',
+                bodyColor: '#CBD5E1',
+                borderColor: '#334155',
+                borderWidth: 1,
+                padding: 12,
+                boxPadding: 6,
+                callbacks: {
+                  label: function(context) {
+                    if (context.dataset.yAxisID === 'yBurn') {
+                      const val = context.parsed.y;
+                      return ` ${context.dataset.label}: ${val > 0 ? '+' : ''}${val}% ${val > 0 ? '(소각 🔥)' : (val < 0 ? '(희석)' : '')}`;
+                    } else {
+                      return ` ${context.dataset.label}: ${context.parsed.y}억 주`;
+                    }
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#1E293B' },
+                ticks: { color: '#94A3B8', font: { family: 'Pretendard' } }
+              },
+              yBurn: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: '연간 소각률 (%)', color: '#10B981' },
+                grid: { color: '#1E293B' },
+                ticks: { color: '#10B981', font: { family: 'JetBrains Mono' }, callback: v => `${v}%` }
+              },
+              yShares: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: { display: true, text: '유통주식수 (억 주)', color: '#A855F7' },
+                grid: { drawOnChartArea: false },
+                ticks: { color: '#A855F7', font: { family: 'JetBrains Mono' }, callback: v => `${v}억` }
+              }
+            }
+          }
+        });
+      } else {
+        // [모드 1] 배당금(DPS) & 순이익(EPS) 차트
+        legendBox.innerHTML = `
+          <div class="legend-item"><div class="dot-bar" style="background:#10B981;"></div><span>주당배당금(DPS 막대)</span></div>
+          <div class="legend-item"><div class="dot-line" style="background:#3B82F6;"></div><span>주당순이익(EPS 꺾은선)</span></div>
+        `;
+
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: d.years.map(y => `${y}년`),
+            datasets: [
+              {
+                type: 'bar',
+                label: `주당배당금 (DPS, ${curr})`,
+                data: d.dps_series,
+                backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                borderColor: '#10B981',
+                borderWidth: 1,
+                borderRadius: 4,
+                yAxisID: 'yDPS',
+                order: 2
+              },
+              {
+                type: 'line',
+                label: `주당순이익 (EPS, ${curr})`,
+                data: d.eps_series,
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                borderWidth: 3,
+                pointBackgroundColor: '#3B82F6',
+                pointRadius: 4,
+                tension: 0.25,
+                yAxisID: 'yEPS',
+                order: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#1E293B',
+                titleColor: '#F8FAFC',
+                bodyColor: '#CBD5E1',
+                borderColor: '#334155',
+                borderWidth: 1,
+                padding: 12,
+                boxPadding: 6,
+                callbacks: {
+                  label: function(context) {
+                    const prefix = isUs ? '$' : '';
+                    const suffix = isUs ? '' : '원';
+                    return ` ${context.dataset.label}: ${prefix}${context.parsed.y.toLocaleString()}${suffix}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#1E293B' },
+                ticks: { color: '#94A3B8', font: { family: 'Pretendard' } }
+              },
+              yDPS: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: `DPS (${curr})`, color: '#10B981' },
+                grid: { color: '#1E293B' },
+                ticks: { color: '#10B981', font: { family: 'JetBrains Mono' } }
+              },
+              yEPS: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: { display: true, text: `EPS (${curr})`, color: '#3B82F6' },
+                grid: { drawOnChartArea: false },
+                ticks: { color: '#3B82F6', font: { family: 'JetBrains Mono' } }
+              }
+            }
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
