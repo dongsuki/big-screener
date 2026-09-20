@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js"></script>
-  <script src="cycle_data.js"></script>
+  <script src="screener_data.js?v=202609202019"></script>
+  <script src="cycle_data.js?v=202609202019"></script>
 
   <style>
     :root {
@@ -2377,12 +2377,16 @@
       const titleEl = document.getElementById('cycle-chart-title');
       if (titleEl) {
         const subNameText = (currentData.has_subsectors ? ` — ${activeData.name}` : '');
-        titleEl.innerHTML = `<span>${currentData.icon}</span><span>${currentData.name}${subNameText} : ${activeData.indicator_name} 10년 추이</span>`;
+        titleEl.innerHTML = `<span>${currentData.icon}</span><span>${currentData.name}${subNameText} : ${activeData.indicator_name}</span>`;
       }
       const subEl = document.getElementById('cycle-chart-sub');
       if (subEl) {
         const commentText = activeData.comment || currentData.current_comment;
-        subEl.textContent = `핵심 지표: ${activeData.indicator_name} (${activeData.unit}) | ${commentText}`;
+        const asOf = activeData.as_of || currentData.as_of;
+        const src = activeData.source || currentData.source;
+        subEl.innerHTML = commentText
+          + (asOf ? ` <span style="color:#38BDF8;">· 기준일 ${asOf}</span>` : '')
+          + (src ? ` <span style="color:var(--text-muted);">· 출처 ${src}</span>` : '');
       }
       const badgeEl = document.getElementById('cycle-chart-badge');
       if (badgeEl) {
@@ -2391,6 +2395,7 @@
           <span class="badge" style="background:${activeData.status_color}22; color:${activeData.status_color}; border:1px solid ${activeData.status_color}66; font-size:13px; font-weight:800; padding: 4px 10px;">
             ${activeData.current_val.toLocaleString()} ${activeData.unit} (${activeData.status_badge})
           </span>
+          ${activeData.yoy == null ? '' : `<div style="font-size:11.5px; margin-top:4px; color:${activeData.yoy >= 0 ? '#10B981' : '#F87171'};">1년 전 대비 ${activeData.yoy >= 0 ? '+' : ''}${activeData.yoy}%</div>`}
         `;
       }
 
@@ -2437,8 +2442,12 @@
               <span style="color: var(--text-muted); font-size: 11.5px; margin-left: 6px;">(${bottomLabel})</span>
             </div>
             <div>
-              <strong style="color: #F59E0B;">🟡 손익분기선(BEP):</strong>
-              <span style="font-family: var(--font-mono); color: #F8FAFC; margin-left:4px;">${bepStr} ${activeData.unit}</span>
+              ${(activeData.break_even != null)
+                ? `<strong style="color: #F59E0B;">🟡 손익분기선(BEP):</strong>
+                   <span style="font-family: var(--font-mono); color: #F8FAFC; margin-left:4px;">${bepStr} ${activeData.unit}</span>`
+                : `<strong style="color: #F59E0B;">🟠 관측 구간 최고치:</strong>
+                   <span style="font-family: var(--font-mono); color: #F8FAFC; margin-left:4px;">${(activeData.peak_val ?? 0).toLocaleString()} ${activeData.unit}</span>
+                   <span style="color: var(--text-muted); font-size: 11.5px; margin-left: 6px;">(지금이 고점 대비 어디인지 보는 기준)</span>`}
             </div>
           </div>
           <div style="font-size: 11.5px; color: var(--text-secondary); border-top: 1px solid var(--border-subtle); padding-top: 6px; margin-top: 2px;">
@@ -2542,7 +2551,11 @@
       const labels = chartObj.labels;
       const values = chartObj.values;
       const bottomBandVal = activeData.bottom_band_val ?? (activeData.chart && activeData.chart.bottom_band_val) ?? (parentData.chart && parentData.chart.bottom_band_val) ?? (activeData.historical_bottom && activeData.historical_bottom.max) ?? 0;
-      const breakEvenVal = activeData.break_even ?? parentData.break_even ?? 0;
+      // 손익분기선이 없는 지표는 대신 '관측 구간 최고치'를 기준선으로 그린다
+      const hasBep = (activeData.break_even != null) || (parentData.break_even != null);
+      const breakEvenVal = hasBep
+        ? (activeData.break_even ?? parentData.break_even)
+        : (activeData.peak_val ?? parentData.peak_val ?? 0);
       const sec = (!parentData.has_subsectors && parentData.chart && parentData.chart.secondary) ? parentData.chart.secondary : null;
 
       const bepLabelStr = typeof breakEvenVal === 'number' ? breakEvenVal.toLocaleString() : (breakEvenVal || '0');
@@ -2566,7 +2579,8 @@
           order: 2
         },
         {
-          label: `손익분기선 (BEP ${bepLabelStr}${activeData.unit})`,
+          label: hasBep ? `손익분기선 (BEP ${bepLabelStr}${activeData.unit})`
+                        : `관측 구간 최고치 (${bepLabelStr}${activeData.unit})`,
           data: labels.map(() => breakEvenVal),
           borderColor: '#F59E0B',
           borderWidth: 1.8,
@@ -2728,12 +2742,12 @@
             <td style="padding:10px 12px; font-size:11.5px; color:var(--text-secondary);">${d.market}</td>
             <td style="padding:10px 12px; font-family:var(--font-mono);">${priceStr}</td>
             <td style="padding:10px 12px; font-family:var(--font-mono);">${marcapStr}</td>
-            <td style="padding:10px 12px; font-family:var(--font-mono);">${d.per}배</td>
-            <td style="padding:10px 12px; font-family:var(--font-mono);">${d.pbr}배</td>
-            <td style="padding:10px 12px; font-family:var(--font-mono); color:${d.dy >= 4.0 ? '#10B981' : 'inherit'}; font-weight:${d.dy >= 4.0 ? '700' : '400'};">${d.dy}%</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${d.per == null ? '—' : d.per + '배'}</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono);">${d.pbr == null ? '—' : d.pbr + '배'}</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono); color:${d.dy >= 4.0 ? '#10B981' : 'inherit'}; font-weight:${d.dy >= 4.0 ? '700' : '400'};">${d.dy == null ? '—' : d.dy + '%'}</td>
             <td style="padding:10px 12px; font-family:var(--font-mono);">${renderTotalYield(d)}</td>
             <td style="padding:10px 12px;">${lossBadge}</td>
-            <td style="padding:10px 12px; font-family:var(--font-mono); color:${d.debt_ratio <= 100 ? '#10B981' : 'inherit'};">${d.debt_ratio}%</td>
+            <td style="padding:10px 12px; font-family:var(--font-mono); color:${d.debt_ratio <= 100 ? '#10B981' : 'inherit'};">${d.debt_ratio == null ? '—' : d.debt_ratio + '%'}</td>
             <td style="padding:10px 12px;">
               <div style="display:flex; flex-wrap:wrap; gap:3px; max-width:240px;">
                 ${passBadges}
