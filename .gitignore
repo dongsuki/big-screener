@@ -11,3 +11,9 @@ _kr_preview.json
 거장의_스크리너.html
 cache_price10y.json
 cycle_history.json
+*.bat
+
+
+# 주가 캔들은 웹에 올려야 한다 (위의 *.json 제외 규칙에서 빼준다)
+!prices/
+!prices/*.json
