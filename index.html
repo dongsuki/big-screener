@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>거장의 렌즈 — 5대 투자 대가 통합 스크리너</title>
+  <title>거장의 렌즈 — 8대 투자 대가 통합 스크리너</title>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- Google Fonts -->
@@ -1042,6 +1042,35 @@
       grid-template-columns: 1.55fr 1fr;
       gap: 18px;
     }
+
+    /* ── 휴대폰·태블릿 대응 ──────────────────────
+       사이드바가 290px 고정이라 좁은 화면에서 표가 거의 안 보였다.
+       좁아지면 사이드바를 위쪽 가로 목록으로 눕힌다. */
+    @media (max-width: 900px) {
+      .app-layout { flex-direction: column; }
+      .sidebar {
+        width: 100%; min-width: 0; height: auto;
+        position: relative; border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+        max-height: none; overflow: visible;
+      }
+      .sidebar-nav {
+        display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px;
+      }
+      .nav-divider { width: 100%; }
+      .main-content { padding: 14px 12px; gap: 14px; }
+      .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 780px; }
+      .master-banner { padding: 14px 16px; }
+      .master-banner h2 { font-size: 16px; }
+      .control-panel { flex-wrap: wrap; gap: 8px; }
+      .modal-content { width: 96vw; max-width: 96vw; padding: 16px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 12px 10px; }
+      table { min-width: 680px; font-size: 12px; }
+    }
+
     @media (max-width: 1200px) {
       .cycle-grid {
         grid-template-columns: 1fr;
@@ -1253,7 +1282,7 @@
           <span class="nav-icon">🔍</span>
           <div class="nav-text">
             <span class="nav-title">전종목 자유 탐색기</span>
-            <span class="nav-desc">한·미 2,723개 종목 무제한 검색</span>
+            <span class="nav-desc">한·미 전종목 무제한 검색</span>
           </div>
         </button>
 
@@ -1697,7 +1726,7 @@
 
   <!-- ── 푸터 ────────────────────────────────── -->
   <footer>
-    거장의 렌즈 스크리너 — 데이터 출처: FnSpace 10년 재무 데이터, 금융감독원 전자공시(DART), 네이버 증권 시세.
+    거장의 렌즈 스크리너 — 데이터 출처: 금융감독원 전자공시(DART) 10개년 재무·현금흐름, FnSpace(EPS·배당), 네이버 증권 시세, Financial Modeling Prep(미국). 기준 표시: 📕 거장의 책 원문 · 📋 규칙 파일 · ⚙️ 자체 기준. 정량 항목만 채점하며, 경영진·해자·업황 같은 정성 판단은 사람의 몫으로 남겨둡니다.
   </footer>
 
   <!-- ── 스크립트 ────────────────────────────── -->
@@ -1733,12 +1762,12 @@
       all: {
         name: '전종목 자유 탐색기',
         icon: '🔍',
-        bannerTitle: '🔍 한·미 2,723개 전종목 자유 탐색기',
+        bannerTitle: '🔍 한·미 전종목 자유 탐색기',
         bannerDesc: '8대 거장의 통과/탈락 기준에 구애받지 않고, 한국·미국 전종목을 검색하여 거장 채점 결과와 배당·환원·소각 펀더멘털을 자유롭게 확인합니다.',
         statLabel: '표시 종목',
         verdicts: ['전체 (무제한)', '거장 1인+ 통과', '거장 2인+ 통과', '거장 3인+ 통과', '거장 5인+ 통과', '거장 미통과(자유탐색)'],
         criteria: [
-          { badge: '자유 검색', color: '#3B82F6', desc: '한국 1,835개 + 미국 888개 상장기업 중 원하는 종목명이나 티커코드를 실시간 검색' },
+          { badge: '자유 검색', color: '#3B82F6', desc: '한국·미국 상장기업 중 원하는 종목명이나 티커코드를 실시간 검색' },
           { badge: '종목 클릭', color: '#10B981', desc: '종목 클릭 시 10년 EPS/배당 차트 + 주식수/소각률 차트 + 8대 거장 동시 채점표 확인' },
           { badge: '환원·소각 필터', color: '#F59E0B', desc: '배당수익률, 총환원율, 실질 주식 소각률, 연속 소각 연수로 자유 스크리닝' }
         ],
@@ -1772,183 +1801,232 @@
         name: '워런 버핏',
         icon: '🎩',
         bannerTitle: '🎩 워런 버핏의 7대 관문 스크리너',
-        bannerDesc: '10년 무적자 + ROE 12%+ + 부채비율 100% 이하 등 5개 관문 중 4개 이상 충족 & 안전마진 확보 기업',
+        bannerDesc: '10년 무적자 · ROE/ROTC · 이자보상배수 · 오너어닝(순이익+감가상각−설비투자) · 1달러 테스트 · 유상증자 희석 · 바닥가치 대비 할인. 데이터가 없는 관문은 채점에서 빼고 <b>판단불가</b>로 둔다.',
         statLabel: '버핏 통과',
-        verdicts: ['통과', '대기', '탈락'],
+        verdicts: ['통과', '훌륭한 기업 · 가격 대기', '대기', '탈락', '판단불가'],
         criteria: [
-          { badge: '통과', color: '#10B981', desc: '5개 관문 중 4개 이상 통과 & 10년 연속 흑자 & 안전마진 확보 (ROE·부채·성장성 종합 충족)' },
-          { badge: '대기', color: '#F59E0B', desc: '관문 3개 이상 통과 또는 안전마진 진입권이나 1~2개 항목 미세 미달' },
-          { badge: '탈락', color: '#EF4444', desc: '10년 중 영업적자 다수 발생 또는 관문 2개 이하 충족' }
+          { badge: '통과', color: '#10B981', desc: 'G1~G6 대부분 통과 + G7 가격(바닥가치 대비 20% 이상 할인)까지 충족' },
+          { badge: '훌륭한 기업 · 가격 대기', color: '#38BDF8', desc: '기업의 질은 관문을 통과했으나 지금 가격이 비싸다 — 버핏의 "공 기다리기"' },
+          { badge: '대기', color: '#F59E0B', desc: '판정 가능한 관문의 60% 이상 통과' },
+          { badge: '탈락', color: '#EF4444', desc: '관문 통과율 60% 미만' },
+          { badge: '판단불가', color: '#64748B', desc: '판정 가능한 관문이 4개 미만 (재무·현금흐름 데이터 부족)' }
         ],
         getVerdict: d => d.buffett.verdict,
         customCols: [
           { key: 'buffett_verdict', label: '버핏 판정', render: d => renderBadge(d.buffett.verdict) },
-          { key: 'buffett_pass_cnt', label: '통과관문', render: d => `${d.buffett.pass_cnt} / 5개` },
-          { key: 'roe', label: '10년 평균 ROE', render: d => `${d.roe}%` },
-          { key: 'debt_ratio', label: '부채비율', render: d => `${d.debt_ratio}%` },
-          { key: 'safety_margin', label: '바닥 안전마진', render: d => d.buffett.safety_margin > 0 ? `<span style="color:#10B981">+${d.buffett.safety_margin}%</span>` : `<span style="color:#94A3B8">${d.buffett.safety_margin}%</span>` }
+          { key: 'buffett_pass_cnt', label: '통과 관문', sort: d => (d.buffett.pass_cnt ?? -1),
+            render: d => d.buffett.judged ? `${d.buffett.pass_cnt} / ${d.buffett.judged}개` : '<span style="color:#64748B">데이터 부족</span>' },
+          { key: 'roe', label: '10년 평균 ROE', sort: d => d.roe, render: d => fmtPct(d.roe) },
+          { key: 'safety_margin', label: '바닥가치 대비 할인 ⚙️', sort: d => d.buffett.safety_margin,
+            render: d => d.buffett.safety_margin == null ? '<span style="color:#64748B">—</span>'
+              : (d.buffett.safety_margin > 0 ? `<strong style="color:#10B981">+${d.buffett.safety_margin}%</strong>` : `<span style="color:#94A3B8">${d.buffett.safety_margin}%</span>`) },
+          { key: 'buffett_floor', label: '바닥가치', sort: d => d.buffett.floor_value,
+            render: d => d.buffett.floor_value == null ? '—' : fmtCap(d.buffett.floor_value, d) }
         ]
       },
       lynch: {
         name: '피터 린치',
         icon: '🔍',
-        bannerTitle: '🔍 피터 린치의 성장속도 대비 가격표(PEG) 스크리너',
-        bannerDesc: '6대 유형 분류 + PEG 1.0 이하(0.5 저평가) + 배당 포함 PEGY 1.8 이상 + 매출증가율 > 재고증가율 건전성 검증',
-        statLabel: '추적 가치',
-        verdicts: ['추적 가치', '검증 필요', '관찰만'],
+        bannerTitle: '🔍 피터 린치의 성장 대비 가격표(PEG) 스크리너',
+        bannerDesc: '『월가의 영웅』 원문 기준 — <b>PEG 0.5 이하 매우 유망 · 1.0 공정가치 · 2.0 이상 회피</b>, PEGY 2 이상, 현금성자산을 뺀 실질 PER(포드 사례), 재고가 매출보다 2배 빨리 늘면 매도 신호.',
+        statLabel: '매우 유망',
+        verdicts: ['매우 유망', '공정가치', '관찰만', '회피', '회피 (재고 경고)', '판단불가'],
         criteria: [
-          { badge: '추적 가치', color: '#10B981', desc: 'PEG 1.0 이하(또는 PEGY 1.8 이상) & 매출증가율 > 재고증가율(재고 건전성 정상)' },
-          { badge: '검증 필요', color: '#F59E0B', desc: 'PEG 1.0~1.5 구간이거나 매출 대비 재고증가율이 높아 주의가 필요한 종목' },
-          { badge: '관찰만', color: '#EF4444', desc: 'PEG 2.0 초과(성장속도 대비 고평가) 또는 이익 역성장 종목' }
+          { badge: '매우 유망', color: '#10B981', desc: '📕 PEG 0.5 이하 (성장률의 절반 가격) 또는 PEGY 2.0 이상' },
+          { badge: '공정가치', color: '#38BDF8', desc: '📕 PEG 1.0 이하 — 원문에서 "공정하게 평가된" 구간. 싼 게 아니라 적정가' },
+          { badge: '관찰만', color: '#94A3B8', desc: 'PEG 1.0~2.0' },
+          { badge: '회피', color: '#EF4444', desc: '📕 PEG 2.0 초과 — 원문의 "매우 불리한" 구간' },
+          { badge: '회피 (재고 경고)', color: '#EF4444', desc: '📕 재고가 매출보다 2배 빠르게 증가 — 원문의 매도 신호' },
+          { badge: '판단불가', color: '#64748B', desc: 'EPS 성장률 또는 PER 계산 불가' }
         ],
         getVerdict: d => d.lynch.verdict,
         customCols: [
           { key: 'lynch_verdict', label: '린치 판정', render: d => renderBadge(d.lynch.verdict) },
-          { key: 'lynch_type', label: '6대 유형', render: d => `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.lynch.type}</span>` },
-          { key: 'eps_cagr', label: '5년 EPS성장', render: d => `${d.lynch.eps_cagr}%` },
-          { key: 'peg', label: 'PEG (성장비용)', render: d => d.lynch.peg < 50 ? (d.lynch.peg <= 0.5 ? `<strong style="color:#10B981">${d.lynch.peg}</strong>` : d.lynch.peg) : '-' },
-          { key: 'pegy', label: 'PEGY (배당포함)', render: d => d.lynch.pegy > 0 ? (d.lynch.pegy >= 2.0 ? `<strong style="color:#F59E0B">${d.lynch.pegy}</strong>` : d.lynch.pegy) : '-' },
-          { key: 'inv_status', label: '매출/재고', render: d => d.lynch.inv_ok ? '<span style="color:#10B981">정상</span>' : '<span style="color:#EF4444">주의</span>' }
+          { key: 'lynch_type', label: '6대 유형', sort: d => d.lynch.type || '',
+            render: d => d.lynch.type ? `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.lynch.type}</span>` : '—' },
+          { key: 'eps_cagr', label: 'EPS 성장률', sort: d => d.lynch.eps_cagr, render: d => fmtPct(d.lynch.eps_cagr) },
+          { key: 'peg', label: 'PEG 📕', sort: d => d.lynch.peg,
+            render: d => d.lynch.peg == null ? '—' : (d.lynch.peg <= 0.5 ? `<strong style="color:#10B981">${d.lynch.peg}</strong>` : d.lynch.peg) },
+          { key: 'pegy', label: 'PEGY 📕', sort: d => d.lynch.pegy,
+            render: d => d.lynch.pegy == null ? '—' : (d.lynch.pegy >= 2.0 ? `<strong style="color:#F59E0B">${d.lynch.pegy}</strong>` : d.lynch.pegy) },
+          { key: 'per_ex_cash', label: '실질 PER(현금차감) 📕', sort: d => d.lynch.per_ex_cash,
+            render: d => d.lynch.per_ex_cash == null ? '—' : `${d.lynch.per_ex_cash}배` },
+          { key: 'inv_status', label: '재고 대 매출 📕', sort: d => d.lynch.inv_state || '',
+            render: d => {
+              const s = d.lynch.inv_state;
+              if (!s || s === '데이터 없음') return '<span style="color:#64748B">데이터 없음</span>';
+              if (s === '양호') return '<span style="color:#10B981">양호</span>';
+              if (s.startsWith('주의')) return '<span style="color:#F59E0B">주의</span>';
+              return '<span style="color:#EF4444">위험</span>';
+            } }
         ]
       },
       oil: {
         name: '오일전문가',
         icon: '🛢️',
         bannerTitle: '🛢️ 오일전문가의 거위 수량 & 자사주 소각 스크리너',
-        bannerDesc: 'PER 저평가 + 배당률 3%+ + 5년 연속 무적자 + 실제 자사주 소각(발행주식수 감소) 100점 배점표',
+        bannerDesc: '규칙 파일 점수표 중 <b>공시·시세로 확인되는 항목만</b> 채점해 100점으로 환산한다. 정성 항목(중복상장·성장 잠재력·경영진·브랜드)은 배점에서 제외 — 사람이 직접 봐야 할 몫.',
         statLabel: 'A·B등급',
-        verdicts: ['A (적극 매수)', 'B (매수 고려)', 'C (보유만)', 'D (비추천)'],
+        verdicts: ['A (기준 최상위)', 'B (기준 상위)', 'C (기준 중간)', 'D (기준 미달)', '판단불가'],
         criteria: [
-          { badge: 'A (적극 매수)', color: '#10B981', desc: '배점 80점 이상: PER 저평가 & 시가배당률 4%+ & 5년 무적자 & 자사주 소각 실적 종합 고득점' },
-          { badge: 'B (매수 고려)', color: '#F59E0B', desc: '배점 70~79점: 기본 배당 체력 확보 및 저PER이나 소각 미실시' },
-          { badge: 'C (보유만)', color: '#94A3B8', desc: '배점 50~69점: 배당률 2.5~4% 수준이거나 이익 성장 둔화' },
-          { badge: 'D (비추천)', color: '#EF4444', desc: '배점 50점 미만: 5년 중 적자 이력 또는 시가배당률 미달' }
+          { badge: 'A (기준 최상위)', color: '#10B981', desc: '📋 정량 환산 80점 이상 — 저PER·저PBR·고배당·실제 소각이 모두 맞물린 상태' },
+          { badge: 'B (기준 상위)', color: '#F59E0B', desc: '📋 70~79점' },
+          { badge: 'C (기준 중간)', color: '#94A3B8', desc: '📋 50~69점' },
+          { badge: 'D (기준 미달)', color: '#EF4444', desc: '📋 50점 미만' },
+          { badge: '판단불가', color: '#64748B', desc: 'PER·PBR·영업이익 데이터 부족' }
         ],
-        getVerdict: d => d.oil.grade,
+        getVerdict: d => d.oil.verdict,
         customCols: [
-          { key: 'oil_grade', label: '오일 등급', render: d => renderBadge(d.oil.grade) },
-          { key: 'oil_score', label: '점수', render: d => `<strong>${d.oil.score}</strong>점` },
-          { key: 'dy', label: '시가배당률', render: d => `<strong style="color:#10B981">${d.dy}%</strong>` },
-          { key: 'burned', label: '자사주 소각', render: d => d.has_burned ? `<span class="badge badge-burn">소각실적있음</span>` : '<span style="color:#64748B">미소각</span>' },
-          { key: 'no_loss', label: '5년 무적자', render: d => d.oil.no_loss_5y ? '<span style="color:#10B981">달성</span>' : '<span style="color:#EF4444">적자이력</span>' }
+          { key: 'oil_grade', label: '오일 등급', render: d => renderBadge(d.oil.verdict) },
+          { key: 'oil_score', label: '정량 점수', sort: d => d.oil.score,
+            render: d => d.oil.score == null ? '—'
+              : `<strong>${d.oil.score}</strong>점 <span style="color:#64748B; font-size:10.5px;">(${d.oil.raw}/${d.oil.raw_max})</span>` },
+          { key: 'dy', label: '시가배당률', sort: d => d.dy, render: d => d.dy ? `<strong style="color:#10B981">${d.dy}%</strong>` : '0%' },
+          { key: 'burned', label: '자사주 소각 📋', sort: d => (d.burned ? 1 : 0),
+            render: d => d.burned ? `<span class="badge badge-burn">소각 실적</span>` : '<span style="color:#64748B">미소각</span>' },
+          { key: 'burn_rate', label: '연간 소각률', sort: d => d.burn_rate, render: d => d.burn_rate ? `${d.burn_rate}%` : '—' },
+          { key: 'no_loss', label: '5년 무적자', sort: d => (d.oil.no_loss_5y ? 1 : 0),
+            render: d => d.oil.no_loss_5y == null ? '—' : (d.oil.no_loss_5y ? '<span style="color:#10B981">달성</span>' : '<span style="color:#EF4444">적자 이력</span>') }
         ]
       },
       vip: {
         name: '한국형 가치투자',
         icon: '🏛️',
         bannerTitle: '🏛️ VIP 최준철·김민국의 4대 유형 & 2단 점프 스크리너',
-        bannerDesc: '스노우볼(10년 고ROE 복리) / 그로스 / 저평가 / 턴어라운드 분류 및 이익 성장+멀티플 리레이팅 상승여력',
+        bannerDesc: '📕 적정 시가총액 = 예상 순이익 × 적정 PER. 그로스형은 PEG 1 미만, 적정 PER은 그레이엄 상한(8.5 + 성장률×2)을 따른다. 촉매·지배구조 같은 정성 항목은 채점에서 제외.',
         statLabel: '적극 편입',
-        verdicts: ['적극 편입', '편입 검토', '관찰 대상', '편입 불가'],
+        verdicts: ['적극 편입', '편입 검토', '관찰 대상', '편입 불가', '판단불가'],
         criteria: [
-          { badge: '적극 편입', color: '#10B981', desc: '10년 고ROE 스노우볼형 기업 또는 2단 점프 목표 상승여력 40% 이상' },
-          { badge: '편입 검토', color: '#F59E0B', desc: '상승여력 20~40% 구간의 그로스/저평가 가치주' },
-          { badge: '관찰 대상', color: '#94A3B8', desc: '상승여력 0~20% 또는 BM 경쟁력 추가 관찰 필요' },
-          { badge: '편입 불가', color: '#EF4444', desc: 'ROE 역성장 및 밸류에이션 고평가 기업' }
+          { badge: '적극 편입', color: '#10B981', desc: '정량 환산 80점 이상 — 좋은 기업(ROE·자본배치)과 좋은 가격(할인율)의 교집합' },
+          { badge: '편입 검토', color: '#F59E0B', desc: '70~79점' },
+          { badge: '관찰 대상', color: '#94A3B8', desc: '50~69점' },
+          { badge: '편입 불가', color: '#EF4444', desc: '50점 미만' },
+          { badge: '판단불가', color: '#64748B', desc: 'PER·ROE·시가총액 데이터 부족' }
         ],
         getVerdict: d => d.vip.verdict,
         customCols: [
           { key: 'vip_verdict', label: 'VIP 판정', render: d => renderBadge(d.vip.verdict) },
-          { key: 'vip_type', label: '4대 유형', render: d => `<span class="badge" style="background:#312E81; color:#A5B4FC;">${d.vip.type}</span>` },
-          { key: 'vip_pos', label: '포지션', render: d => d.vip.position },
-          { key: 'vip_upside', label: '2단점프 여력', render: d => d.vip.upside > 0 ? `<strong style="color:#F59E0B">+${d.vip.upside}%</strong>` : '-' },
-          { key: 'roe', label: 'ROE', render: d => `${d.roe}%` }
+          { key: 'vip_score', label: '정량 점수', sort: d => d.vip.score, render: d => d.vip.score == null ? '—' : `<strong>${d.vip.score}</strong>점` },
+          { key: 'vip_type', label: '4대 유형', sort: d => d.vip.type || '',
+            render: d => d.vip.type ? `<span class="badge" style="background:#312E81; color:#A5B4FC;">${d.vip.type}</span>` : '—' },
+          { key: 'vip_pos', label: '포지션', sort: d => d.vip.position || '', render: d => d.vip.position || '—' },
+          { key: 'vip_upside', label: '적정시총 대비 여력 📕', sort: d => d.vip.upside,
+            render: d => d.vip.upside == null ? '—' : (d.vip.upside > 0 ? `<strong style="color:#F59E0B">+${d.vip.upside}%</strong>` : `<span style="color:#94A3B8">${d.vip.upside}%</span>`) },
+          { key: 'roe', label: 'ROE', sort: d => d.roe, render: d => fmtPct(d.roe) }
         ]
       },
       leader: {
         name: '07leader',
         icon: '🏗️',
-        bannerTitle: '🏗️ 07leader의 미래가치주 & 차입금 축소 턴어라운드 스크리너',
-        bannerDesc: 'PER 6 이하 + PBR 0.5 이하 + 3년 연속 차입금(부채) 감소 + 감가상각 종료 숨은 현금흐름 선취매',
+        bannerTitle: '🏗️ 07leader의 미래가치주 & 차입금 축소 스크리너',
+        bannerDesc: '📋 기준선은 PER 5·PBR 0.5 이하이며 <b>PBR 3 이상은 무조건 배제</b>한다. 성장이 멈춘 저PBR 자산주는 가점이 아니라 경고로 표시. 업황 선행지표·복합호재 등 정성 항목은 채점에서 제외.',
         statLabel: '길목 선취매',
-        verdicts: ['길목 선취매', '분할 매집', '관찰 대기', '매수 금지'],
+        verdicts: ['길목 선취매', '분할 매집', '관찰 대기', '관찰 대기 (성장 없는 자산주)', '기준 미달', '절대 매수 금지', '판단불가'],
         criteria: [
-          { badge: '길목 선취매', color: '#10B981', desc: '80점 이상 & PBR 1.0 이하: PER 6 이하 + PBR 0.5 이하 + 3년 연속 부채 축소 + 영업익 개선' },
-          { badge: '분할 매집', color: '#F59E0B', desc: '68~79점 & PBR 1.5 이하: 부채 감소 추세 또는 배당/자산 안전마진 보유' },
-          { badge: '관찰 대기', color: '#94A3B8', desc: '50~67점: 부채 정체 또는 턴어라운드 초기 단계' },
-          { badge: '매수 금지', color: '#EF4444', desc: '50점 미만 또는 부채 지속 증가/적자 지속' }
+          { badge: '길목 선취매', color: '#10B981', desc: '정량 환산 80점 이상 — 극저평가 + 부채 축소 + 실적 턴어라운드' },
+          { badge: '분할 매집', color: '#F59E0B', desc: '70~79점' },
+          { badge: '관찰 대기', color: '#94A3B8', desc: '50~69점' },
+          { badge: '관찰 대기 (성장 없는 자산주)', color: '#94A3B8', desc: '📋 저PBR이지만 턴어라운드도 이익 증가도 없음 — 규칙이 배제하라는 "단순 자산주"' },
+          { badge: '기준 미달', color: '#EF4444', desc: '50점 미만' },
+          { badge: '절대 매수 금지', color: '#EF4444', desc: '📋 PBR 3 이상 — "달리는 말"은 아무리 좋아도 사지 않는다' },
+          { badge: '판단불가', color: '#64748B', desc: 'PER·PBR·영업이익 데이터 부족' }
         ],
         getVerdict: d => d.leader.verdict,
         customCols: [
           { key: 'leader_verdict', label: '리더 판정', render: d => renderBadge(d.leader.verdict) },
-          { key: 'leader_score', label: '리더 점수', render: d => `<strong>${d.leader.score}</strong>점` },
-          { key: 'debt_down', label: '부채 축소', render: d => d.leader.debt_down ? '<span style="color:#10B981">3년연속감소</span>' : '<span style="color:#64748B">정체/증가</span>' },
-          { key: 'pbr', label: 'PBR', render: d => d.pbr <= 0.5 ? `<strong style="color:#10B981">${d.pbr}</strong>` : d.pbr }
+          { key: 'leader_score', label: '정량 점수', sort: d => d.leader.score, render: d => d.leader.score == null ? '—' : `<strong>${d.leader.score}</strong>점` },
+          { key: 'per', label: 'PER', sort: d => d.per, render: d => d.per == null ? '—' : (d.per <= 5 ? `<strong style="color:#10B981">${d.per}</strong>` : d.per) },
+          { key: 'pbr', label: 'PBR 📋', sort: d => d.pbr,
+            render: d => d.pbr == null ? '—' : (d.pbr >= 3 ? `<strong style="color:#EF4444">${d.pbr}</strong>` : (d.pbr <= 0.5 ? `<strong style="color:#10B981">${d.pbr}</strong>` : d.pbr)) },
+          { key: 'debt_down', label: '부채 축소', sort: d => (d.leader.debt_down ? 1 : 0),
+            render: d => d.leader.debt_down == null ? '—' : (d.leader.debt_down ? '<span style="color:#10B981">3년 연속 감소</span>' : '<span style="color:#64748B">정체/증가</span>') },
+          { key: 'turnaround', label: '턴어라운드', sort: d => (d.leader.turnaround ? 1 : 0),
+            render: d => d.leader.turnaround ? '<span style="color:#10B981">적자 탈출</span>' : '<span style="color:#64748B">—</span>' }
         ]
       },
       kiyohara: {
         name: '기요하라 다쓰로',
         icon: '🍶',
-        bannerTitle: '🍶 기요하라 다쓰로의 넷넷 순현금 & 현금중립 PER 스크리너',
-        bannerDesc: '순현금(유동자산+유가증권×0.7-총부채) 흑자 + 순현금비율(NCR) 30% 이상 + 현금중립PER(CN-PER) 6배 이하의 극단적 저평가 자산주',
-        statLabel: '기요하라 통과',
-        verdicts: ['넷넷 초저평가', '순현금 우량', '현금 보통', '순부채 차입'],
+        bannerTitle: '🍶 기요하라 다쓰로의 넷넷 순현금 & 캐시뉴트럴 PER 스크리너',
+        bannerDesc: '순현금 = 유동자산 + 투자유가증권×70% − <b>총부채</b>. 캐시뉴트럴 PER = (시가총액 − 순현금) ÷ 순이익. 한국·미국에 같은 공식을 적용한다.',
+        statLabel: '순현금 우량+',
+        verdicts: ['넷넷 초저평가', '순현금 우량', '현금 보통', '순부채 차입', '판단불가'],
         criteria: [
-          { badge: '넷넷 초저평가', color: '#10B981', desc: '순현금비율(NCR) ≥ 70% 또는 (NCR ≥ 35% & 현금중립PER ≤ 4.0배 & 순현금 흑자)' },
-          { badge: '순현금 우량', color: '#F59E0B', desc: 'NCR ≥ 25% 또는 현금중립PER ≤ 8.0배 (시총 대비 현금 풍부)' },
-          { badge: '현금 보통', color: '#94A3B8', desc: '순현금 > 0 (부채보다 현금이 많으나 비율 25% 미만)' },
-          { badge: '순부채 차입', color: '#EF4444', desc: '순현금 적자 (총부채가 유동자산+유가증권보다 많음)' }
+          { badge: '넷넷 초저평가', color: '#10B981', desc: '순현금비율 70% 이상, 또는 순현금 흑자 + 캐시뉴트럴 PER 4배 이하' },
+          { badge: '순현금 우량', color: '#F59E0B', desc: '순현금비율 25% 이상, 또는 순현금 흑자 + 캐시뉴트럴 PER 8배 이하' },
+          { badge: '현금 보통', color: '#94A3B8', desc: '순현금은 흑자이나 시가총액 대비 비중이 작음' },
+          { badge: '순부채 차입', color: '#EF4444', desc: '총부채가 유동자산+유가증권보다 많음' },
+          { badge: '판단불가', color: '#64748B', desc: '재무상태표(유동자산·총부채) 없음' }
         ],
         getVerdict: d => d.kiyohara.verdict,
         customCols: [
           { key: 'kiyohara_verdict', label: '기요하라 판정', render: d => renderBadge(d.kiyohara.verdict) },
-          { key: 'kiyohara_net_cash', label: '순현금(억)', render: d => d.kiyohara.net_cash > 0 ? `<strong style="color:#10B981">${d.kiyohara.net_cash.toLocaleString()}</strong>` : `<span style="color:#94A3B8">${d.kiyohara.net_cash.toLocaleString()}</span>` },
-          { key: 'kiyohara_ncr', label: '순현금비율(NCR)', render: d => d.kiyohara.ncr >= 100 ? `<strong style="color:#F59E0B">🔥 ${d.kiyohara.ncr}%</strong>` : (d.kiyohara.ncr >= 50 ? `<strong style="color:#10B981">${d.kiyohara.ncr}%</strong>` : `${d.kiyohara.ncr}%`) },
-          { key: 'kiyohara_cn_per', label: '현금중립PER', render: d => d.kiyohara.cn_per < 0 ? `<span class="badge" style="background:#064E3B; color:#34D399;">음수 (${d.kiyohara.cn_per})</span>` : (d.kiyohara.cn_per <= 5.0 ? `<strong style="color:#10B981">${d.kiyohara.cn_per}배</strong>` : `${d.kiyohara.cn_per}배`) },
-          { key: 'pbr', label: 'PBR', render: d => `${d.pbr}` }
+          { key: 'kiyohara_net_cash', label: '순현금', sort: d => d.kiyohara.net_cash,
+            render: d => d.kiyohara.net_cash == null ? '—' : fmtCap(d.kiyohara.net_cash, d) },
+          { key: 'kiyohara_ncr', label: '순현금비율', sort: d => d.kiyohara.ncr,
+            render: d => d.kiyohara.ncr == null ? '—' : (d.kiyohara.ncr >= 70 ? `<strong style="color:#F59E0B">🔥 ${d.kiyohara.ncr}%</strong>` : (d.kiyohara.ncr >= 25 ? `<strong style="color:#10B981">${d.kiyohara.ncr}%</strong>` : `${d.kiyohara.ncr}%`)) },
+          { key: 'kiyohara_cn_per', label: '캐시뉴트럴 PER', sort: d => d.kiyohara.cn_per,
+            render: d => d.kiyohara.cn_per == null ? '—' : (d.kiyohara.cn_per < 0 ? `<span class="badge" style="background:#064E3B; color:#34D399;">음수 (${d.kiyohara.cn_per})</span>` : (d.kiyohara.cn_per <= 5 ? `<strong style="color:#10B981">${d.kiyohara.cn_per}배</strong>` : `${d.kiyohara.cn_per}배`)) },
+          { key: 'pbr', label: 'PBR', sort: d => d.pbr, render: d => d.pbr == null ? '—' : d.pbr }
         ]
       },
       siegel: {
         name: '제러미 시겔',
         icon: '📚',
-        bannerTitle: '📚 제러미 시겔의 배당성장 & DGRW 퀄리티 스크리너',
-        bannerDesc: '《투자의 미래》 배당지급 + 배당성향 100% 이하 + PER 27 이하 승자군 필터 & DGRW 퀄리티 점수(EPS성장50+ROE25+ROA25)',
-        statLabel: '시겔 통과',
-        verdicts: ['DGRW 최우량', '배당퀄리티 우량', '배당 유지', '가치함정/비추천'],
+        bannerTitle: '📚 제러미 시겔의 배당성장 & 퀄리티 스크리너',
+        bannerDesc: '배당을 실제로 주는 기업 중 이익성장·ROE·ROA가 높은 쪽을 상위로 본다(DGRW 방식: 성장 50 + ROE 25 + ROA 25). 한국·미국 기준을 통일했다.',
+        statLabel: '배당퀄리티 우량+',
+        verdicts: ['배당퀄리티 최상위', '배당퀄리티 우량', '배당 유지', '배당 없음 (대상 아님)', '배당 지속성 의심', '판단불가'],
         criteria: [
-          { badge: 'DGRW 최우량', color: '#10B981', desc: '사전필터 3종 통과 & 퀄리티점수 ≥ 70점 & 배당률 ≥ 2.5% & 배당성향 ≤ 60%' },
-          { badge: '배당퀄리티 우량', color: '#F59E0B', desc: '사전필터 3종 통과 & 퀄리티점수 ≥ 50점 (이익성장+ROE+ROA 균형 우량주)' },
-          { badge: '배당 유지', color: '#94A3B8', desc: '사전필터 3종 통과 (배당을 지급하나 퀄리티 점수가 50점 미만)' },
-          { badge: '가치함정/비추천', color: '#EF4444', desc: '배당성향 100% 초과(이익초과 배당) 또는 무배당 또는 PER 27 초과(성장의 함정)' }
+          { badge: '배당퀄리티 최상위', color: '#10B981', desc: '퀄리티 70점 이상 + 배당수익률 2% 이상 + 배당성향 65% 이하' },
+          { badge: '배당퀄리티 우량', color: '#F59E0B', desc: '퀄리티 50점 이상' },
+          { badge: '배당 유지', color: '#94A3B8', desc: '배당은 주지만 퀄리티 점수가 낮음' },
+          { badge: '배당 없음 (대상 아님)', color: '#64748B', desc: '배당을 주지 않아 이 렌즈의 대상이 아님' },
+          { badge: '배당 지속성 의심', color: '#EF4444', desc: '순이익을 넘는 배당 — 지속 불가' },
+          { badge: '판단불가', color: '#64748B', desc: 'ROE·배당성향 데이터 부족' }
         ],
-        getVerdict: d => d.siegel ? d.siegel.verdict : '가치함정/비추천',
+        getVerdict: d => d.siegel.verdict,
         customCols: [
-          { key: 'siegel_verdict', label: '시겔 판정', render: d => renderBadge(d.siegel ? d.siegel.verdict : '-') },
-          { key: 'siegel_score', label: 'DGRW점수', render: d => `<strong>${d.siegel ? d.siegel.score : '-'}</strong>점` },
-          { key: 'payout', label: '배당성향', render: d => `${d.payout}%` },
-          { key: 'siegel_roa', label: 'ROA(총자산)', render: d => `${d.siegel ? d.siegel.roa : '-'}%` },
-          { key: 'roe', label: 'ROE', render: d => `${d.roe}%` }
+          { key: 'siegel_verdict', label: '시겔 판정', render: d => renderBadge(d.siegel.verdict) },
+          { key: 'siegel_score', label: '퀄리티 점수', sort: d => d.siegel.score, render: d => d.siegel.score == null ? '—' : `<strong>${d.siegel.score}</strong>점` },
+          { key: 'dy', label: '배당수익률', sort: d => d.dy, render: d => d.dy ? `${d.dy}%` : '0%' },
+          { key: 'payout', label: '배당성향', sort: d => d.payout, render: d => fmtPct(d.payout) },
+          { key: 'siegel_roa', label: 'ROA', sort: d => d.roa, render: d => fmtPct(d.roa) },
+          { key: 'roe', label: 'ROE', sort: d => d.roe, render: d => fmtPct(d.roe) }
         ]
       },
       minervini: {
         name: '마크 미너비니',
         icon: '⚡',
         bannerTitle: '⚡ 마크 미너비니의 SEPA 2단계 상승 & RS 주도주 스크리너',
-        bannerDesc: '2단계 상승 국면(Stage 2 Uptrend) + 실적 가속도(EPS) + 시장 주도 상대강도(RS순위) + 펀더멘털 종합점수 결합 SEPA 전략',
+        bannerDesc: '추세 템플릿·실적 가속도는 별도 Airtable 스크리너에서 추출된 결과를 그대로 가져온다. 목록을 불러오지 못하면 <b>불러오기 실패</b>로 표시하며, 그 경우 "기준 미달"은 신뢰할 수 없다.',
         statLabel: '2단계 상승',
-        verdicts: ['🚀 2단계 상승', '📈 추세 형성', '기준 미달'],
+        verdicts: ['🚀 2단계 상승', '📈 추세 형성', '기준 미달', '불러오기 실패'],
         criteria: [
-          { badge: '🚀 2단계 상승', color: '#10B981', desc: '주도주 2단계 상승 국면 & 종합점수 60점 이상 (강력한 실적 가속도 + 시장 주도 상대강도 RS)' },
-          { badge: '📈 추세 형성', color: '#F59E0B', desc: '상승 추세 진입권 (SEPA 필터 통과 & 종합점수 60점 미만 관찰권)' },
-          { badge: '기준 미달', color: '#EF4444', desc: '이동평균선 역배열, 4단계 하락 국면 또는 실적/추세 기준 미달 종목' }
+          { badge: '🚀 2단계 상승', color: '#10B981', desc: 'Airtable 선정 + 종합점수 60점 이상' },
+          { badge: '📈 추세 형성', color: '#F59E0B', desc: 'Airtable 선정 + 종합점수 60점 미만' },
+          { badge: '기준 미달', color: '#EF4444', desc: 'Airtable 목록에 없음' },
+          { badge: '불러오기 실패', color: '#64748B', desc: 'Airtable을 불러오지 못함 — 판정 자체가 무효' }
         ],
         getVerdict: d => (d.minervini ? d.minervini.verdict : '기준 미달'),
         customCols: [
           { key: 'minervini_verdict', label: 'SEPA 판정', render: d => renderBadge(d.minervini ? d.minervini.verdict : '기준 미달') },
-          { key: 'minervini_score', label: '종합점수', render: d => (d.minervini && d.minervini.score !== null && d.minervini.score !== undefined) ? `<strong>${d.minervini.score}</strong>점` : '-' },
-          { key: 'minervini_rs', label: 'RS순위', render: d => {
-            if (!d.minervini || d.minervini.rs === null || d.minervini.rs === undefined) return '-';
+          { key: 'minervini_score', label: '종합점수', sort: d => (d.minervini ? d.minervini.score : null),
+            render: d => (d.minervini && d.minervini.score != null) ? `<strong>${d.minervini.score}</strong>점` : '—' },
+          { key: 'minervini_rs', label: 'RS순위', sort: d => (d.minervini ? d.minervini.rs : null), render: d => {
+            if (!d.minervini || d.minervini.rs == null) return '—';
             const r = d.minervini.rs;
             if (r >= 90) return `<strong style="color:#10B981;">🔥 ${r}</strong>`;
             if (r >= 80) return `<strong style="color:#38BDF8;">${r}</strong>`;
             return `${r}`;
           }},
-          { key: 'minervini_eps', label: '최신분기 EPS성장', render: d => {
-            if (!d.minervini || d.minervini.eps_growth === null || d.minervini.eps_growth === undefined) return '-';
+          { key: 'minervini_eps', label: '최신분기 EPS성장', sort: d => (d.minervini ? d.minervini.eps_growth : null), render: d => {
+            if (!d.minervini || d.minervini.eps_growth == null) return '—';
             const val = d.minervini.eps_growth;
             return val > 0 ? `<strong style="color:#10B981">+${val}%</strong>` : `<span style="color:#EF4444">${val}%</span>`;
           }},
-          { key: 'minervini_theme', label: '주도 테마/재료', render: d => (d.minervini && d.minervini.theme && d.minervini.theme !== '-') ? `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.minervini.theme}</span>` : '-' }
+          { key: 'minervini_theme', label: '주도 테마/재료', sort: d => (d.minervini ? d.minervini.theme : ''),
+            render: d => (d.minervini && d.minervini.theme && d.minervini.theme !== '-') ? `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.minervini.theme}</span>` : '—' }
         ]
       },
       multipass: {
@@ -1996,12 +2074,12 @@
     function getPassedMasters(d) {
       const p = [];
       if (d.buffett && d.buffett.verdict === '통과') p.push('버핏');
-      if (d.lynch && d.lynch.verdict === '추적 가치') p.push('린치');
-      if (d.oil && (d.oil.grade === 'A (적극 매수)' || d.oil.grade === 'B (매수 고려)')) p.push('오일');
+      if (d.lynch && d.lynch.verdict === '매우 유망') p.push('린치');
+      if (d.oil && (d.oil.verdict === 'A (기준 최상위)' || d.oil.verdict === 'B (기준 상위)')) p.push('오일');
       if (d.vip && d.vip.verdict === '적극 편입') p.push('VIP');
       if (d.leader && d.leader.verdict === '길목 선취매') p.push('리더');
       if (d.kiyohara && (d.kiyohara.verdict === '넷넷 초저평가' || d.kiyohara.verdict === '순현금 우량')) p.push('기요하라');
-      if (d.siegel && (d.siegel.verdict === 'DGRW 최우량' || d.siegel.verdict === '배당퀄리티 우량')) p.push('시겔');
+      if (d.siegel && (d.siegel.verdict === '배당퀄리티 최상위' || d.siegel.verdict === '배당퀄리티 우량')) p.push('시겔');
       if (d.minervini && d.minervini.passed) p.push('미너비니');
       return p;
     }
@@ -2021,7 +2099,7 @@
           })
           .catch(err => {
             console.error('데이터 로드 실패:', err);
-            alert('데이터 파일을 불러오지 못했습니다. 같은 폴더에 screener_data.js 또는 screener_data.json이 있는지 확인하세요.');
+            alert('데이터 파일(screener_data.js)을 불러오지 못했습니다. 새로고침해도 같으면 알려주세요.');
           });
       }
     });
@@ -2636,9 +2714,11 @@
           ? passedMasters.map(m => `<span class="badge" style="background:#1E293B; color:#CBD5E1; padding:1px 5px; font-size:10.5px; margin-right:2px;">${m}</span>`).join('')
           : '<span style="color:#64748B; font-size:11px;">-</span>';
 
-        const lossBadge = (d.loss_cnt === 0)
-          ? `<span class="badge badge-pass">10년 무적자</span>`
-          : `<span class="badge badge-fail">적자 ${d.loss_cnt}회</span>`;
+        const g1 = (d.buffett && d.buffett.items) ? d.buffett.items.find(x => x.gate === 'G1') : null;
+        const lossBadge = (!g1 || g1.ok === null || g1.ok === undefined)
+          ? `<span class="badge" style="background:#1E293B; color:#94A3B8;">데이터 부족</span>`
+          : (g1.ok ? `<span class="badge badge-pass">${g1.why}</span>`
+                   : `<span class="badge badge-fail">${g1.why}</span>`);
 
         return `
           <tr data-code="${d.code}" style="cursor:pointer;">
@@ -2709,7 +2789,8 @@
       if (!cfg) return;
 
       document.getElementById('banner-title').textContent = cfg.bannerTitle;
-      document.getElementById('banner-desc').textContent = cfg.bannerDesc;
+      // 설명문에 <b> 같은 간단한 강조 태그를 쓰므로 innerHTML 로 넣는다 (우리가 직접 쓴 문구만 들어간다)
+      document.getElementById('banner-desc').innerHTML = cfg.bannerDesc;
       document.getElementById('b-stat-1-label').textContent = cfg.statLabel;
 
       // 판정 기준 설명 가이드 박스 렌더링
@@ -2919,93 +3000,36 @@
         return true;
       });
 
-      // 정렬
+      // 정렬 — 각 거장 설정의 sort 접근자를 그대로 쓴다.
+      // (예전에는 컬럼 이름으로 데이터를 직접 찾아 undefined가 되는 칸이 많았다)
+      const sortCol = (cfg.customCols || []).find(c => c.key === sortColumn);
+      const verdictRank = {};
+      (cfg.verdicts || []).forEach((v, i) => { verdictRank[v] = (cfg.verdicts.length - i); });
+
+      function sortValue(d) {
+        if (sortCol && typeof sortCol.sort === 'function') return sortCol.sort(d);
+        if (sortColumn.endsWith('_verdict') || sortColumn === 'oil_grade') {
+          return verdictRank[cfg.getVerdict(d)] ?? 0;
+        }
+        if (sortColumn === 'pass_count' || sortColumn === 'passed_masters') {
+          return getPassedMasters(d).length;
+        }
+        if (sortColumn === 'total_yield') return d.total_yield ?? d.dy ?? null;
+        return d[sortColumn];
+      }
+
       filtered.sort((a, b) => {
-        let valA = a[sortColumn];
-        let valB = b[sortColumn];
-        if (sortColumn === 'total_yield') {
-          valA = a.total_yield !== undefined ? a.total_yield : a.dy;
-          valB = b.total_yield !== undefined ? b.total_yield : b.dy;
+        const va = sortValue(a), vb = sortValue(b);
+        const na = (va === null || va === undefined || Number.isNaN(va));
+        const nb = (vb === null || vb === undefined || Number.isNaN(vb));
+        if (na && nb) return 0;
+        if (na) return 1;          // 값 없는 종목은 항상 아래로
+        if (nb) return -1;
+        if (typeof va === 'string' || typeof vb === 'string') {
+          const sa = String(va), sb = String(vb);
+          return sortOrder === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
         }
-        if (sortColumn === 'burn_rate') {
-          valA = a.burn_rate !== undefined && a.burn_rate !== null ? a.burn_rate : -999;
-          valB = b.burn_rate !== undefined && b.burn_rate !== null ? b.burn_rate : -999;
-        }
-        if (sortColumn === 'dps_cagr_3y') {
-          valA = a.dps_cagr_3y === 999.0 ? 500 : (a.dps_cagr_3y ?? -999);
-          valB = b.dps_cagr_3y === 999.0 ? 500 : (b.dps_cagr_3y ?? -999);
-        }
-        if (sortColumn === 'pass_count') { valA = getPassedMasters(a).length; valB = getPassedMasters(b).length; }
-        
-        // 거장별 판정 정렬 가중치 (우수한 판정이 상단에 오도록 수치화)
-        if (sortColumn === 'buffett_verdict') {
-          const m = { '통과': 3, '대기': 2, '탈락': 1 };
-          valA = m[a.buffett?.verdict] || 0;
-          valB = m[b.buffett?.verdict] || 0;
-        }
-        if (sortColumn === 'lynch_verdict') {
-          const m = { '추적 가치': 3, '검증 필요': 2, '관찰만': 1 };
-          valA = m[a.lynch?.verdict] || 0;
-          valB = m[b.lynch?.verdict] || 0;
-        }
-        if (sortColumn === 'oil_grade') {
-          const m = { 'A (적극 매수)': 4, 'B (매수 고려)': 3, 'C (보유만)': 2, 'D (비추천)': 1 };
-          valA = m[a.oil?.grade] || 0;
-          valB = m[b.oil?.grade] || 0;
-        }
-        if (sortColumn === 'oil_score') { valA = a.oil?.score || 0; valB = b.oil?.score || 0; }
-        if (sortColumn === 'vip_verdict') {
-          const m = { '적극 편입': 4, '편입 검토': 3, '관찰 대상': 2, '편입 불가': 1 };
-          valA = m[a.vip?.verdict] || 0;
-          valB = m[b.vip?.verdict] || 0;
-        }
-        if (sortColumn === 'leader_verdict') {
-          const m = { '길목 선취매': 4, '분할 매집': 3, '관찰 대기': 2, '매수 금지': 1 };
-          valA = m[a.leader?.verdict] || 0;
-          valB = m[b.leader?.verdict] || 0;
-        }
-        if (sortColumn === 'leader_score') { valA = a.leader?.score || 0; valB = b.leader?.score || 0; }
-        if (sortColumn === 'kiyohara_verdict') {
-          const m = { '넷넷 초저평가': 4, '순현금 우량': 3, '현금 보통': 2, '순부채 차입': 1 };
-          valA = m[a.kiyohara?.verdict] || 0;
-          valB = m[b.kiyohara?.verdict] || 0;
-        }
-        if (sortColumn === 'kiyohara_net_cash') { valA = a.kiyohara?.net_cash || 0; valB = b.kiyohara?.net_cash || 0; }
-        if (sortColumn === 'kiyohara_ncr') { valA = a.kiyohara?.ncr || 0; valB = b.kiyohara?.ncr || 0; }
-        if (sortColumn === 'kiyohara_cn_per') { valA = a.kiyohara?.cn_per || 999; valB = b.kiyohara?.cn_per || 999; }
-        if (sortColumn === 'siegel_verdict') {
-          const m = { 'DGRW 최우량': 4, '배당퀄리티 우량': 3, '배당 유지': 2, '가치함정/비추천': 1 };
-          valA = m[a.siegel?.verdict] || 0;
-          valB = m[b.siegel?.verdict] || 0;
-        }
-        if (sortColumn === 'siegel_score') { valA = a.siegel?.score || 0; valB = b.siegel?.score || 0; }
-        if (sortColumn === 'siegel_roa') { valA = a.siegel?.roa || 0; valB = b.siegel?.roa || 0; }
-
-        // 마크 미너비니 컬럼 정렬
-        if (sortColumn === 'minervini_verdict') {
-          const m = { '🚀 2단계 상승': 3, '📈 추세 형성': 2, '기준 미달': 1 };
-          valA = m[a.minervini?.verdict] || 0;
-          valB = m[b.minervini?.verdict] || 0;
-        }
-        if (sortColumn === 'minervini_score') {
-          valA = a.minervini?.score ?? -999;
-          valB = b.minervini?.score ?? -999;
-        }
-        if (sortColumn === 'minervini_rs') {
-          valA = a.minervini?.rs ?? -999;
-          valB = b.minervini?.rs ?? -999;
-        }
-        if (sortColumn === 'minervini_eps') {
-          valA = a.minervini?.eps_growth ?? -999999;
-          valB = b.minervini?.eps_growth ?? -999999;
-        }
-        if (sortColumn === 'minervini_theme') {
-          valA = a.minervini?.theme || '';
-          valB = b.minervini?.theme || '';
-        }
-
-        if (typeof valA === 'string') return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-        return sortOrder === 'asc' ? (valA - valB) : (valB - valA);
+        return sortOrder === 'asc' ? (va - vb) : (vb - va);
       });
 
       // 상단 배너 통계 갱신
@@ -3017,7 +3041,8 @@
         return;
       }
 
-      tbody.innerHTML = filtered.slice(0, 300).map((d, idx) => {
+      const LIMIT = window.__rowLimit || 300;
+      tbody.innerHTML = filtered.slice(0, LIMIT).map((d, idx) => {
         const customTds = cfg.customCols.map(c => `<td>${c.render(d)}</td>`).join('');
         const priceStr = d.country === 'US' ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
         const marcapStr = d.country === 'US' ? `<span style="color:#38BDF8; font-weight:700;">$${d.marcap_usd}B</span>` : `${d.marcap.toLocaleString()}억`;
@@ -3035,9 +3060,9 @@
             <td><span class="cell-market ${marketClass}">${d.market}</span></td>
             <td style="font-weight:600;">${priceStr}</td>
             <td>${marcapStr}</td>
-            <td>${d.per}</td>
-            <td>${d.pbr}</td>
-            <td>${d.dy}%</td>
+            <td>${fmtVal(d.per)}</td>
+            <td>${fmtVal(d.pbr)}</td>
+            <td>${d.dy == null ? '<span style="color:#64748B">—</span>' : d.dy + '%'}</td>
             <td>${renderTotalYield(d)}</td>
             <td>${renderBurnRate(d)}</td>
             <td>${renderDividendGrowth(d)}</td>
@@ -3060,15 +3085,23 @@
     function updateBannerStats(list) {
       const cfg = MASTER_CONFIG[currentMaster];
       let topCount = 0;
+      // 각 거장의 '최상위 판정' 개수 — 설정의 verdicts 순서를 그대로 쓴다
+      const TOP_VERDICTS = {
+        all: null,
+        buffett: ['통과'],
+        lynch: ['매우 유망'],
+        oil: ['A (기준 최상위)', 'B (기준 상위)'],
+        vip: ['적극 편입'],
+        leader: ['길목 선취매'],
+        kiyohara: ['넷넷 초저평가', '순현금 우량'],
+        siegel: ['배당퀄리티 최상위', '배당퀄리티 우량'],
+        minervini: ['🚀 2단계 상승']
+      };
       if (currentMaster === 'all') topCount = list.length;
-      if (currentMaster === 'buffett') topCount = list.filter(x => x.buffett.verdict === '통과').length;
-      if (currentMaster === 'lynch') topCount = list.filter(x => x.lynch.verdict === '추적 가치').length;
-      if (currentMaster === 'oil') topCount = list.filter(x => x.oil.grade.startsWith('A') || x.oil.grade.startsWith('B')).length;
-      if (currentMaster === 'vip') topCount = list.filter(x => x.vip.verdict === '적극 편입').length;
-      if (currentMaster === 'leader') topCount = list.filter(x => x.leader.verdict === '길목 선취매').length;
-      if (currentMaster === 'kiyohara') topCount = list.filter(x => x.kiyohara.verdict === '넷넷 초저평가' || x.kiyohara.verdict === '순현금 우량').length;
-      if (currentMaster === 'siegel') topCount = list.filter(x => x.siegel && (x.siegel.verdict === 'DGRW 최우량' || x.siegel.verdict === '배당퀄리티 우량')).length;
-      if (currentMaster === 'minervini') topCount = list.filter(x => x.minervini && x.minervini.verdict === '🚀 2단계 상승').length;
+      else if (TOP_VERDICTS[currentMaster]) {
+        const want = TOP_VERDICTS[currentMaster];
+        topCount = list.filter(x => want.includes(cfg.getVerdict(x))).length;
+      }
       if (currentMaster === 'multipass') {
         if (selectedCustomMasters && selectedCustomMasters.size > 0) {
           const names = Array.from(selectedCustomMasters).join(' + ');
@@ -3086,8 +3119,10 @@
       document.getElementById('b-stat-1-val').textContent = topCount.toLocaleString();
 
       if (list.length > 0) {
-        const avgDy = (list.reduce((acc, x) => acc + x.dy, 0) / list.length).toFixed(1);
-        const avgPer = (list.reduce((acc, x) => acc + (x.per < 100 ? x.per : 0), 0) / list.length).toFixed(1);
+        const dys = list.map(x => x.dy).filter(v => v !== null && v !== undefined);
+        const pers = list.map(x => x.per).filter(v => v !== null && v !== undefined && v > 0 && v < 100);
+        const avgDy = dys.length ? (dys.reduce((a, b) => a + b, 0) / dys.length).toFixed(1) : '0';
+        const avgPer = pers.length ? (pers.reduce((a, b) => a + b, 0) / pers.length).toFixed(1) : '0';
         document.getElementById('b-stat-dy').textContent = `${avgDy}%`;
         document.getElementById('b-stat-per').textContent = `${avgPer}배`;
       } else {
@@ -3097,15 +3132,35 @@
     }
 
     // 배지 렌더러
+    // ── 표시 헬퍼 ──────────────────────────────
+    // 값이 없으면 0이나 '-'가 아니라 '—'(데이터 없음)로 보여준다.
+    function fmtVal(v) {
+      return (v === null || v === undefined) ? '<span style="color:#64748B">—</span>' : v;
+    }
+    function fmtPct(v) {
+      return (v === null || v === undefined) ? '<span style="color:#64748B">—</span>' : `${v}%`;
+    }
+    function fmtCap(v, d) {
+      if (v === null || v === undefined) return '—';
+      const unit = (d && d.country === 'US') ? 'M$' : '억';
+      return `${Math.round(v).toLocaleString()}${unit}`;
+    }
+
     function renderBadge(text) {
       if (!text) return '-';
-      if (text.includes('통과') || text.includes('추적') || text.includes('적극') || text.includes('길목') || text.includes('최우량') || text.includes('넷넷') || text.startsWith('A') || text.includes('2단계 상승')) {
+      if (text.includes('판단불가') || text.includes('데이터') || text.includes('불러오기 실패') || text.includes('대상 아님')) {
+        return `<span class="badge" style="background:#1E293B; color:#94A3B8; border:1px solid #334155;">${text}</span>`;
+      }
+      if (text.includes('가격 대기')) {
+        return `<span class="badge" style="background:#0C4A6E; color:#7DD3FC; border:1px solid #0369A1;">${text}</span>`;
+      }
+      if (text.includes('통과') || text.includes('매우 유망') || text.includes('적극') || text.includes('길목') || text.includes('최상위') || text.includes('넷넷') || text.startsWith('A ') || text.includes('2단계 상승')) {
         return `<span class="badge badge-pass">${text}</span>`;
       }
-      if (text.includes('대기') || text.includes('검증') || text.includes('고려') || text.includes('편입 검토') || text.includes('분할') || text.includes('우량') || text.startsWith('B') || text.includes('추세 형성')) {
+      if (text.includes('공정가치') || text.includes('검토') || text.includes('분할') || text.includes('우량') || text.startsWith('B ') || text.includes('추세 형성')) {
         return `<span class="badge badge-wait">${text}</span>`;
       }
-      if (text.includes('보통') || text.includes('유지') || text.includes('관찰') || text.startsWith('C')) {
+      if (text.includes('보통') || text.includes('유지') || text.includes('관찰') || text.includes('대기') || text.startsWith('C ')) {
         return `<span class="badge badge-c">${text}</span>`;
       }
       return `<span class="badge badge-fail">${text}</span>`;
@@ -3154,47 +3209,60 @@
 
       // 8대 거장 평가 카드 그리드 채우기
       const evalGrid = document.getElementById('eval-grid');
-      const netCashDisplay = d.country === 'US' ? `$${d.kiyohara.net_cash_usd_b}B` : `${d.kiyohara.net_cash.toLocaleString()}억`;
+      // 값이 없으면 숫자를 지어내지 않고 '데이터 없음'이라고 적는다
+      const nz = (v, suf = '') => (v === null || v === undefined) ? '—' : `${v}${suf}`;
+      const gateLine = (bf) => {
+        if (!bf.items || !bf.items.length) return '관문 판정 불가';
+        return bf.items.map(g => {
+          const mark = g.ok === true ? '✅' : (g.ok === false ? '❌' : '⬜');
+          return `<span title="${g.name}: ${g.why}">${mark}${g.gate}</span>`;
+        }).join(' ');
+      };
+      const netCashDisplay = (d.kiyohara.net_cash == null) ? '—'
+        : (d.country === 'US' ? `${Math.round(d.kiyohara.net_cash).toLocaleString()}M$`
+                              : `${Math.round(d.kiyohara.net_cash).toLocaleString()}억`);
       evalGrid.innerHTML = `
         <div class="eval-card">
           <div class="eval-master">🎩 워런 버핏</div>
           <div class="eval-verdict">${renderBadge(d.buffett.verdict)}</div>
-          <div class="eval-desc">적자 ${d.buffett.loss_cnt}회 | 관문 ${d.buffett.pass_cnt}/5 | 안전마진 ${d.buffett.safety_margin}%</div>
+          <div class="eval-desc" style="letter-spacing:0.5px">${gateLine(d.buffett)}</div>
+          <div class="eval-desc">관문 ${nz(d.buffett.pass_cnt)}/${nz(d.buffett.judged)} 통과 · 바닥가치 대비 ${nz(d.buffett.safety_margin, '%')} ⚙️</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">🔍 피터 린치</div>
           <div class="eval-verdict">${renderBadge(d.lynch.verdict)}</div>
-          <div class="eval-desc">${d.lynch.type} | PEG ${d.lynch.peg < 50 ? d.lynch.peg : '-'} | PEGY ${d.lynch.pegy} | 성장 ${d.lynch.eps_cagr}%</div>
+          <div class="eval-desc">${nz(d.lynch.type)} · PEG ${nz(d.lynch.peg)} · PEGY ${nz(d.lynch.pegy)} · 성장 ${nz(d.lynch.eps_cagr, '%')}</div>
+          <div class="eval-desc">실질 PER ${nz(d.lynch.per_ex_cash, '배')} · 재고 ${nz(d.lynch.inv_state)}</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">🛢️ 오일전문가</div>
-          <div class="eval-verdict">${renderBadge(d.oil.grade)}</div>
-          <div class="eval-desc">${d.oil.score}점 | 총환원율 ${totalYieldStr} | 소각률 ${burnRateStr} | ${d.has_burned ? '소각실적보유' : '미소각'}</div>
+          <div class="eval-verdict">${renderBadge(d.oil.verdict)}</div>
+          <div class="eval-desc">정량 ${nz(d.oil.score, '점')}${d.oil.raw != null ? ` (${d.oil.raw}/${d.oil.raw_max})` : ''} · 총환원율 ${totalYieldStr} · 소각률 ${burnRateStr}</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">🏛️ VIP 가치</div>
           <div class="eval-verdict">${renderBadge(d.vip.verdict)}</div>
-          <div class="eval-desc">${d.vip.type} (${d.vip.position}) | 2단점프 여력 ${d.vip.upside}%</div>
+          <div class="eval-desc">${nz(d.vip.type)}${d.vip.position ? ` (${d.vip.position})` : ''} · 적정 PER ${nz(d.vip.fair_per, '배')} 기준 여력 ${nz(d.vip.upside, '%')}</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">🏗️ 07leader</div>
           <div class="eval-verdict">${renderBadge(d.leader.verdict)}</div>
-          <div class="eval-desc">${d.leader.score}점 | ${d.leader.debt_down ? '부채3년감소' : '부채정체'} | PBR ${d.pbr}</div>
+          <div class="eval-desc">정량 ${nz(d.leader.score, '점')} · ${d.leader.debt_down ? '부채 3년 연속 감소' : '부채 정체/증가'} · PBR ${nz(d.pbr)}</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">🍶 기요하라 다쓰로</div>
           <div class="eval-verdict">${renderBadge(d.kiyohara.verdict)}</div>
-          <div class="eval-desc">순현금 ${netCashDisplay} | NCR ${d.kiyohara.ncr}% | 현금중립PER ${d.kiyohara.cn_per < 0 ? '음수('+d.kiyohara.cn_per+')' : d.kiyohara.cn_per+'배'}</div>
+          <div class="eval-desc">순현금 ${netCashDisplay} · 순현금비율 ${nz(d.kiyohara.ncr, '%')} · 캐시뉴트럴 PER ${nz(d.kiyohara.cn_per, '배')}</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">📚 제러미 시겔</div>
-          <div class="eval-verdict">${renderBadge(d.siegel ? d.siegel.verdict : '-')}</div>
-          <div class="eval-desc">DGRW ${d.siegel ? d.siegel.score : 0}점 | ROA ${d.siegel ? d.siegel.roa : 0}% | 성향 ${d.payout}%</div>
+          <div class="eval-verdict">${renderBadge(d.siegel.verdict)}</div>
+          <div class="eval-desc">퀄리티 ${nz(d.siegel.score, '점')} · ROA ${nz(d.siegel.roa, '%')} · 배당성향 ${nz(d.payout, '%')}</div>
         </div>
         <div class="eval-card">
           <div class="eval-master">⚡ 마크 미너비니</div>
           <div class="eval-verdict">${renderBadge(d.minervini ? d.minervini.verdict : '기준 미달')}</div>
-          <div class="eval-desc">${(d.minervini && d.minervini.passed) ? `종합 ${d.minervini.score}점 | RS ${d.minervini.rs} | EPS ${d.minervini.eps_growth}% | ${d.minervini.theme || '-'}` : '추세 미형성/기준 미달'}</div>
+          <div class="eval-desc">${(d.minervini && d.minervini.passed) ? `종합 ${nz(d.minervini.score, '점')} · RS ${nz(d.minervini.rs)} · EPS ${nz(d.minervini.eps_growth, '%')} · ${d.minervini.theme || '-'}` : (d.minervini && d.minervini.verdict === '불러오기 실패' ? 'Airtable 목록을 불러오지 못함 — 판정 무효' : 'Airtable 선정 목록에 없음')}</div>
         </div>
       `;
 

@@ -1,0 +1,13 @@
+# 비밀 열쇠(API 키)가 들어있는 프로그램 파일 - 절대 인터넷에 올리지 않음
+*.py
+__pycache__/
+# 원본/백업 데이터 (웹사이트엔 screener_data.js 만 필요)
+*.json
+*.bak
+*.txt
+.env
+*.log
+_kr_preview.json
+거장의_스크리너.html
+cache_price10y.json
+cycle_history.json
