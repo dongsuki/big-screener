@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202609202019"></script>
-  <script src="cycle_data.js?v=202609202019"></script>
+  <script src="screener_data.js?v=202609202113"></script>
+  <script src="cycle_data.js?v=202609202113"></script>
 
   <style>
     :root {
@@ -981,6 +981,36 @@
     }
 
     /* ── 사이클 레이더 전용 스타일 ────────────────────────── */
+
+    /* 사이클 레이더 — 좌측 업종 목록 (거장 렌즈 목록과 같은 모양) */
+    .cycle-nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+    .cycle-nav-btn:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+    }
+    .cycle-nav-btn.active {
+      background: var(--bg-surface-elevated);
+      border-color: #38BDF8;
+      color: #FFF;
+    }
+    .cycle-nav-btn .cn-icon { font-size: 17px; }
+    .cycle-nav-btn .cn-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .cycle-nav-btn .cn-name { font-size: 12.5px; font-weight: 700; color: inherit; }
+    .cycle-nav-btn .cn-badge { font-size: 10.5px; font-weight: 600; }
+
     .cycle-container {
       display: flex;
       flex-direction: column;
@@ -1304,7 +1334,11 @@
           </div>
         </button>
 
-        <div class="nav-divider">8대 거장 렌즈</div>
+        <!-- 사이클 레이더를 열면 여기에 업종 목록이 세로로 뜬다 -->
+        <div class="nav-divider" id="cycle-nav-divider" style="display:none;">업종 사이클</div>
+        <div id="cycle-nav-list" style="display:none; flex-direction:column; gap:4px;"></div>
+
+        <div class="nav-divider" id="master-nav-divider">8대 거장 렌즈</div>
 
         <button class="nav-item active" data-master="buffett">
           <span class="nav-icon">🎩</span>
@@ -1679,6 +1713,26 @@
       </div>
 
       <div class="modal-body">
+        <!-- 주가 차트 (년봉·월봉·주봉·일봉) -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <div class="chart-tabs" id="price-tf-tabs">
+                <button class="chart-tab-btn" data-tf="y">년봉</button>
+                <button class="chart-tab-btn" data-tf="m">월봉</button>
+                <button class="chart-tab-btn active" data-tf="w">주봉</button>
+                <button class="chart-tab-btn" data-tf="d">일봉</button>
+              </div>
+              <span id="m-price-range" style="font-size:12px; font-weight:700; color:var(--text-secondary);"></span>
+            </div>
+            <div class="chart-legend"><div class="legend-item"><div class="dot-bar" style="background:#EF4444;"></div><span>상승</span></div><div class="legend-item"><div class="dot-bar" style="background:#3B82F6;"></div><span>하락</span></div></div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="price-chart"></canvas>
+          </div>
+          <div id="price-chart-note" style="font-size:11.5px; color:var(--text-muted); padding:4px 2px 0;"></div>
+        </div>
+
         <!-- 10년 펀더멘털 차트 (EPS/DPS & 주식수/소각률 탭 전환) -->
         <div class="chart-card">
           <div class="chart-header">
@@ -2274,6 +2328,19 @@
       });
 
       // 차트 탭 전환 (EPS/DPS vs 주식수/소각률)
+      // 주가 차트 기간 버튼 (년봉·월봉·주봉·일봉)
+      const tfTabs = document.getElementById('price-tf-tabs');
+      if (tfTabs) {
+        tfTabs.querySelectorAll('.chart-tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            currentPriceTf = btn.dataset.tf;
+            tfTabs.querySelectorAll('.chart-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderPriceChart();
+          });
+        });
+      }
+
       document.getElementById('tab-btn-eps-dps').addEventListener('click', () => {
         currentChartTab = 'eps_dps';
         document.getElementById('tab-btn-eps-dps').classList.add('active');
@@ -2306,27 +2373,28 @@
       if (!currentData) return;
 
       // 1. 업종 선택 탭 바 렌더링
+      // 1. 업종 목록 — 좌측 사이드바에 세로로 (거장 렌즈 목록과 같은 자리)
+      const indKeys = Object.keys(dataMap);
+      const navList = document.getElementById('cycle-nav-list');
       const indBar = document.getElementById('cycle-industry-bar');
-      if (indBar) {
-        const indKeys = Object.keys(dataMap);
-        indBar.innerHTML = indKeys.map(k => {
+      if (indBar) indBar.style.display = 'none';   // 예전 가로 바는 감춘다
+
+      if (navList) {
+        navList.innerHTML = indKeys.map(k => {
           const item = dataMap[k];
           const isActive = (k === currentCycleIndustry);
           return `
-            <button class="cycle-ind-btn ${isActive ? 'active' : ''}" data-ind="${k}">
-              <span style="font-size: 22px;">${item.icon}</span>
-              <div class="cycle-ind-info">
-                <span class="cycle-ind-name">${item.name}</span>
-                <span class="cycle-ind-badge" style="background:${item.status_color}22; color:${item.status_color}; border:1px solid ${item.status_color}55;">
-                  ${item.status_badge} (${item.current_val} ${item.unit})
-                </span>
-              </div>
+            <button class="cycle-nav-btn ${isActive ? 'active' : ''}" data-ind="${k}">
+              <span class="cn-icon">${item.icon}</span>
+              <span class="cn-text">
+                <span class="cn-name">${item.name}</span>
+                <span class="cn-badge" style="color:${item.status_color};">${item.status_badge}</span>
+              </span>
             </button>
           `;
         }).join('');
 
-        // 업종 버튼 클릭 이벤트
-        indBar.querySelectorAll('.cycle-ind-btn').forEach(btn => {
+        navList.querySelectorAll('.cycle-nav-btn').forEach(btn => {
           btn.addEventListener('click', e => {
             const indKey = e.currentTarget.dataset.ind;
             if (indKey && indKey !== currentCycleIndustry) {
@@ -2781,6 +2849,14 @@
         comboPanelEl.style.display = (masterKey === 'multipass') ? 'block' : 'none';
       }
 
+      const cycleNav = document.getElementById('cycle-nav-list');
+      const cycleDiv = document.getElementById('cycle-nav-divider');
+      const masterDiv = document.getElementById('master-nav-divider');
+      const isCycle = (masterKey === 'cycle');
+      if (cycleNav) cycleNav.style.display = isCycle ? 'flex' : 'none';
+      if (cycleDiv) cycleDiv.style.display = isCycle ? 'block' : 'none';
+      if (masterDiv) masterDiv.style.display = isCycle ? 'none' : 'block';
+
       if (masterKey === 'cycle') {
         if (bannerEl) bannerEl.style.display = 'none';
         if (controlEl) controlEl.style.display = 'none';
@@ -3180,9 +3256,135 @@
       return `<span class="badge badge-fail">${text}</span>`;
     }
 
+
+    // ── 주가 캔들 차트 (년봉·월봉·주봉·일봉) ─────────────
+    // 캔들은 종목마다 따로 저장해 두고(prices/종목코드.json),
+    // 클릭한 종목 하나만 받아온다. 그래서 첫 화면이 무거워지지 않는다.
+    let priceChartObj = null;
+    let currentPriceTf = 'w';
+    let currentPriceCode = null;
+    const priceCache = {};
+
+    function loadPrices(code) {
+      if (priceCache[code]) return Promise.resolve(priceCache[code]);
+      return fetch(`prices/${code}.json`)
+        .then(r => r.ok ? r.json() : null)
+        .then(j => { priceCache[code] = j; return j; })
+        .catch(() => null);
+    }
+
+    function unpackCandles(tf) {
+      // 저장은 '시가 + 차이값'이라 원래 값으로 되돌린다
+      const out = [];
+      for (let i = 0; i < tf.o.length; i++) {
+        const o = tf.o[i];
+        out.push({ t: tf.t[i], o, h: o + tf.h[i], l: o + tf.l[i], c: o + tf.c[i] });
+      }
+      return out;
+    }
+
+    function labelOf(t) {
+      if (t.length === 4) return t;                                  // 2026
+      if (t.length === 6) return `${t.slice(2,4)}.${t.slice(4,6)}`;  // 26.08
+      return `${t.slice(2,4)}.${t.slice(4,6)}.${t.slice(6,8)}`;      // 26.08.14
+    }
+
+    function renderPriceChart() {
+      const canvas = document.getElementById('price-chart');
+      const note = document.getElementById('price-chart-note');
+      const rangeEl = document.getElementById('m-price-range');
+      if (!canvas) return;
+      if (priceChartObj) { priceChartObj.destroy(); priceChartObj = null; }
+
+      const rec = priceCache[currentPriceCode];
+      if (!rec) {
+        if (note) note.textContent = '이 종목의 주가 기록이 아직 없습니다.';
+        if (rangeEl) rangeEl.textContent = '';
+        return;
+      }
+      const candles = unpackCandles(rec[currentPriceTf] || rec.m);
+      const st = allData.find(x => x.code === currentPriceCode);
+      const isUs = st && st.country === 'US';
+      const fmt = v => isUs ? `$${v.toLocaleString()}` : `${v.toLocaleString()}원`;
+
+      const hi = Math.max(...candles.map(c => c.h));
+      const lo = Math.min(...candles.map(c => c.l));
+      const cur = candles[candles.length - 1].c;
+      if (rangeEl) {
+        rangeEl.innerHTML = `최고 ${fmt(hi)} · 최저 ${fmt(lo)} ` +
+          `<span style="color:#F87171;">(고점 대비 ${((cur/hi-1)*100).toFixed(0)}%)</span> ` +
+          `<span style="color:#10B981;">(저점 대비 +${((cur/lo-1)*100).toFixed(0)}%)</span>`;
+      }
+      if (note) {
+        const span = { y: '최근 10년', m: '최근 10년', w: '최근 2년', d: '최근 6개월' }[currentPriceTf];
+        note.textContent = `${span} · 빨강은 오른 날, 파랑은 내린 날 (한국 증시 기준 색)`;
+      }
+
+      // 캔들 = 얇은 막대(고가~저가) + 굵은 막대(시가~종가)
+      const up = '#EF4444', down = '#3B82F6';
+      const color = candles.map(c => c.c >= c.o ? up : down);
+      priceChartObj = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: candles.map(c => labelOf(c.t)),
+          datasets: [
+            { label: '고저', data: candles.map(c => [c.l, c.h]),
+              backgroundColor: color, borderWidth: 0,
+              barPercentage: 0.12, categoryPercentage: 0.9, order: 2 },
+            { label: '시종', data: candles.map(c => [Math.min(c.o, c.c), Math.max(c.o, c.c)]),
+              backgroundColor: color, borderWidth: 0,
+              barPercentage: 0.62, categoryPercentage: 0.9, order: 1 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              filter: item => item.datasetIndex === 1,
+              callbacks: {
+                title: items => {
+                  const c = candles[items[0].dataIndex];
+                  return c.t.length === 8
+                    ? `${c.t.slice(0,4)}-${c.t.slice(4,6)}-${c.t.slice(6,8)}`
+                    : (c.t.length === 6 ? `${c.t.slice(0,4)}-${c.t.slice(4,6)}` : c.t);
+                },
+                label: item => {
+                  const c = candles[item.dataIndex];
+                  const pct = c.o ? ((c.c / c.o - 1) * 100).toFixed(1) : '0';
+                  return [`시 ${fmt(c.o)}  고 ${fmt(c.h)}`,
+                          `저 ${fmt(c.l)}  종 ${fmt(c.c)}`,
+                          `등락 ${pct >= 0 ? '+' : ''}${pct}%`];
+                }
+              }
+            }
+          },
+          scales: {
+            x: { stacked: false, ticks: { color: '#94A3B8', maxTicksLimit: 10, font: { size: 10 } },
+                 grid: { display: false } },
+            y: { ticks: { color: '#94A3B8', font: { size: 10 },
+                          callback: v => isUs ? `$${v}` : v.toLocaleString() },
+                 grid: { color: 'rgba(148,163,184,0.08)' } }
+          }
+        }
+      });
+    }
+
+    function openPriceChart(code) {
+      currentPriceCode = code;
+      const note = document.getElementById('price-chart-note');
+      if (note) note.textContent = '주가를 불러오는 중...';
+      loadPrices(code).then(() => {
+        if (currentPriceCode === code) renderPriceChart();
+      });
+    }
+
+
     // ── 상세 모달 오픈 ─────────────────────────
     function openDetailModal(d) {
       document.getElementById('m-name-code').textContent = `${d.name} (${d.code})`;
+      openPriceChart(d.code);
       
       const cagr = d.dps_cagr_3y;
       let cagrStr = '-';
