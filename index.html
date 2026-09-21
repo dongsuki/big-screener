@@ -437,7 +437,8 @@
       border-radius: 2px;
     }
     .country-pill-group {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;   /* 전체·한국 / 미국·일본 — 4개가 한 줄이면 사이드바를 넘친다 */
       background: #0B0E14;
       padding: 3px;
       border-radius: var(--radius-sm);
