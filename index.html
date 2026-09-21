@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202609211308"></script>
-  <script src="cycle_data.js?v=202609211308"></script>
+  <script src="screener_data.js?v=202609211542"></script>
+  <script src="cycle_data.js?v=202609211542"></script>
 
   <style>
     :root {
@@ -163,6 +163,15 @@
       background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
       border-color: #2DD4BF;
     }
+    .tj-sub { display: none; flex-direction: column; gap: 3px; margin: 2px 0 6px 38px; }
+    .tj-sub.show { display: flex; }
+    .tj-sub-btn {
+      text-align: left; padding: 5px 10px; border-radius: 8px; font-size: 12px;
+      background: transparent; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer;
+    }
+    .tj-sub-btn:hover { background: rgba(56,189,248,0.08); }
+    .tj-sub-btn.active { background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.5); color: #7DD3FC; font-weight: 700; }
+    .tj-sub-btn .cnt { color: #64748B; font-weight: 400; margin-left: 4px; }
     .nav-item[data-master="tajjang"].active {
       background: linear-gradient(135deg, #1E3A8A 0%, #0369A1 100%);
       border-color: #38BDF8;
@@ -1306,6 +1315,7 @@
           <button class="country-pill active" data-country="ALL">🌐 전체(통합)</button>
           <button class="country-pill" data-country="KR">🇰🇷 한국주식</button>
           <button class="country-pill" data-country="US">🇺🇸 미국주식</button>
+          <button class="country-pill" data-country="JP">🇯🇵 일본주식</button>
         </div>
       </div>
 
@@ -1399,6 +1409,14 @@
             <span class="nav-desc">적자 바닥 시클리컬 · PER 5배 목표</span>
           </div>
         </button>
+        <div class="tj-sub" id="tj-sub">
+          <button type="button" class="tj-sub-btn active" data-type="ALL">전체 유형</button>
+          <button type="button" class="tj-sub-btn" data-type="시클리컬가치주">🔄 시클리컬가치주</button>
+          <button type="button" class="tj-sub-btn" data-type="자산가치주">🏦 자산가치주</button>
+          <button type="button" class="tj-sub-btn" data-type="수익가치주">💹 수익가치주</button>
+          <button type="button" class="tj-sub-btn" data-type="복수">🔗 두 유형 이상</button>
+          <button type="button" class="tj-sub-btn" data-type="영역 밖">⬜ 영역 밖</button>
+        </div>
 
         <button class="nav-item" data-master="siegel">
           <span class="nav-icon">📚</span>
@@ -1525,6 +1543,19 @@
           <option value="KOSDAQ">KOSDAQ (코스닥)</option>
           <option value="NYSE">NYSE (뉴욕)</option>
           <option value="NASDAQ">NASDAQ (나스닥)</option>
+          <option value="TSE">TSE (도쿄)</option>
+        </select>
+      </div>
+
+      <div class="filter-group" id="tj-type-group" style="display:none">
+        <label>타짱 유형:</label>
+        <select class="filter-select" id="tj-type-filter">
+          <option value="ALL">전체 유형</option>
+          <option value="시클리컬가치주">시클리컬가치주</option>
+          <option value="자산가치주">자산가치주</option>
+          <option value="수익가치주">수익가치주</option>
+          <option value="복수">두 유형 이상</option>
+          <option value="영역 밖">영역 밖</option>
         </select>
       </div>
 
@@ -2235,12 +2266,15 @@
       if (el) {
         const krCnt = allData.filter(x => x.country === 'KR').length;
         const usCnt = allData.filter(x => x.country === 'US').length;
+        const jpCnt = allData.filter(x => x.country === 'JP').length;
         if (currentCountry === 'KR') {
           el.textContent = `${krCnt.toLocaleString()}개 (한국)`;
         } else if (currentCountry === 'US') {
           el.textContent = `${usCnt.toLocaleString()}개 (미국)`;
+        } else if (currentCountry === 'JP') {
+          el.textContent = `${jpCnt.toLocaleString()}개 (일본)`;
         } else {
-          el.textContent = `${allData.length.toLocaleString()}개 (한·미 통합)`;
+          el.textContent = `${allData.length.toLocaleString()}개 (한·미·일 통합)`;
         }
       }
       const dateEl = document.getElementById('stat-base-date');
@@ -2277,6 +2311,12 @@
           updateMasterView(currentMaster);
         });
       });
+
+      // 타짱 유형 (왼쪽 메뉴 버튼 ↔ 위쪽 드롭다운 동기화)
+      document.querySelectorAll('.tj-sub-btn').forEach(btn => {
+        btn.addEventListener('click', e => setTjType(e.currentTarget.dataset.type, true));
+      });
+      document.getElementById('tj-type-filter').addEventListener('change', e => setTjType(e.target.value, true));
 
       // 검색 & 필터
       document.getElementById('search-input').addEventListener('input', renderTable);
@@ -2376,6 +2416,7 @@
         document.getElementById('search-input').value = '';
         document.getElementById('market-filter').value = 'ALL';
         document.getElementById('verdict-filter').value = 'ALL';
+        setTjType('ALL', false);
         document.getElementById('cagr-filter').value = 'ALL';
         document.getElementById('yield-filter').value = 'ALL';
         currentCountry = 'ALL';
@@ -2843,7 +2884,7 @@
       }
 
       if (matchedStocks.length === 0) {
-        const countryName = currentCountry === 'KR' ? '한국주식' : '미국주식';
+        const countryName = (CUR[currentCountry] || CUR.KR).name + '주식';
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:35px; color:var(--text-muted); font-size:13px;">
           선택하신 시장(<strong>${countryName}</strong>)에 속한 대표 종목이 이 업종/선종에 없습니다.<br>
           <span style="color:var(--accent-gold); font-size:12px; margin-top:4px; display:inline-block;">좌측 상단의 '🌐 전체(통합)' 탭을 클릭하시면 글로벌 대표주를 함께 확인하실 수 있습니다.</span>
@@ -2852,9 +2893,8 @@
       }
 
       tbody.innerHTML = matchedStocks.map(d => {
-        const isUs = (d.country === 'US');
-        const priceStr = isUs ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
-        const marcapStr = isUs ? `$${d.marcap_usd}B` : `${d.marcap.toLocaleString()}억`;
+        const priceStr = fmtPrice(d);
+        const marcapStr = fmtMcap(d);
         const passedMasters = getPassedMasters(d);
 
         const passBadges = passedMasters.length > 0
@@ -2959,6 +2999,13 @@
         `).join('');
       }
 
+      // 타짱 유형 메뉴는 타짱 탭에서만
+      const isTj = (currentMaster === 'tajjang');
+      document.getElementById('tj-type-group').style.display = isTj ? '' : 'none';
+      document.getElementById('tj-sub').classList.toggle('show', isTj);
+      if (!isTj) setTjType('ALL', false);
+      else updateTjCounts();
+
       // 판정 드롭다운 채우기
       const verdictSelect = document.getElementById('verdict-filter');
       verdictSelect.innerHTML = '<option value="ALL">전체 판정</option>' +
@@ -3054,8 +3101,8 @@
     function renderDividendGrowth(d) {
       const cagr = d.dps_cagr_3y;
       if (cagr === undefined || cagr === null) return '-';
-      const curr = d.country === 'US' ? '$' : '원';
-      const tooltip = d.dps_start_yr ? `${d.dps_start_yr}년 ${curr === '$' ? '$' : ''}${d.dps_start_val.toLocaleString()}${curr === '원' ? '원' : ''} → ${d.dps_end_yr}년 ${curr === '$' ? '$' : ''}${d.dps_end_val.toLocaleString()}${curr === '원' ? '원' : ''}` : '';
+      const curr = { KR: '원', US: '$', JP: '¥' }[d.country] || '원';
+      const tooltip = d.dps_start_yr ? `${d.dps_start_yr}년 ${curOf(d).pre}${d.dps_start_val.toLocaleString()}${curOf(d).suf} → ${d.dps_end_yr}년 ${curOf(d).pre}${d.dps_end_val.toLocaleString()}${curOf(d).suf}` : '';
       
       if (cagr === 999.0) {
         return `<span class="badge" style="background:rgba(37,99,235,0.2); color:#60A5FA; border:1px solid rgba(59,130,246,0.4);" title="${tooltip}">신규배당</span>`;
@@ -3075,9 +3122,33 @@
       return `<span style="color:#F87171;" title="${tooltip}">${cagr}%</span>`;
     }
 
+    // 타짱 유형 선택
+    function tjTypeMatch(d, want) {
+      if (!want || want === 'ALL') return true;
+      const t = d.tajjang || {};
+      const types = t.types || [];
+      if (want === '영역 밖') return t.verdict === '영역 밖';
+      if (want === '복수') return types.length >= 2;
+      return types.includes(want);
+    }
+    function setTjType(type, redraw) {
+      document.getElementById('tj-type-filter').value = type;
+      document.querySelectorAll('.tj-sub-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+      if (redraw) renderTable();
+    }
+    function updateTjCounts() {
+      const base = allData.filter(d => currentCountry === 'ALL' || d.country === currentCountry);
+      document.querySelectorAll('.tj-sub-btn').forEach(b => {
+        const n = base.filter(d => tjTypeMatch(d, b.dataset.type)).length;
+        const label = b.textContent.replace(/\s*\d[\d,]*개$/, '');
+        b.innerHTML = `${label}<span class="cnt">${n.toLocaleString()}개</span>`;
+      });
+    }
+
     // 테이블 본문 렌더링
     function renderTable() {
       const cfg = MASTER_CONFIG[currentMaster];
+      if (currentMaster === 'tajjang') updateTjCounts();   // 나라를 바꾸면 유형별 개수도 바뀐다
       const search = document.getElementById('search-input').value.trim().toLowerCase();
       const market = document.getElementById('market-filter').value;
       const verdict = document.getElementById('verdict-filter').value;
@@ -3089,8 +3160,10 @@
 
       // 필터링
       let filtered = allData.filter(d => {
-        // 국가/시장 필터 (한국 / 미국 / 전체)
+        // 국가/시장 필터 (한국 / 미국 / 일본 / 전체)
         if (currentCountry !== 'ALL' && d.country !== currentCountry) return false;
+        // 타짱 유형 (타짱 탭에서만)
+        if (currentMaster === 'tajjang' && !tjTypeMatch(d, document.getElementById('tj-type-filter').value)) return false;
 
         // 세부 검색 (종목명, 티커코드)
         if (search && !d.name.toLowerCase().includes(search) && !d.code.toLowerCase().includes(search)) return false;
@@ -3199,8 +3272,8 @@
       const LIMIT = window.__rowLimit || 300;
       tbody.innerHTML = filtered.slice(0, LIMIT).map((d, idx) => {
         const customTds = cfg.customCols.map(c => `<td>${c.render(d)}</td>`).join('');
-        const priceStr = d.country === 'US' ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
-        const marcapStr = d.country === 'US' ? `<span style="color:#38BDF8; font-weight:700;">$${d.marcap_usd}B</span>` : `${d.marcap.toLocaleString()}억`;
+        const priceStr = fmtPrice(d);
+        const marcapStr = d.country === 'KR' ? fmtMcap(d) : `<span style="color:#38BDF8; font-weight:700;">${fmtMcap(d)}</span>`;
         const marketClass = d.market ? `market-${d.market.toLowerCase()}` : '';
 
         return `
@@ -3296,10 +3369,26 @@
     function fmtPct(v) {
       return (v === null || v === undefined) ? '<span style="color:#64748B">—</span>' : `${v}%`;
     }
+    // 나라별 돈 표시 규칙 (계산 단위: 한국 억원 / 미국 백만 달러 / 일본 백만 엔)
+    const CUR = {
+      KR: { pre: '', suf: '원', unit: '억', seriesUnit: '억원', name: '한국' },
+      US: { pre: '$', suf: '', unit: 'M$', seriesUnit: '백만 달러', name: '미국' },
+      JP: { pre: '¥', suf: '', unit: '백만¥', seriesUnit: '백만 엔', name: '일본' }
+    };
+    function curOf(d) { return CUR[(d && d.country) || 'KR'] || CUR.KR; }
+    function fmtPrice(d) {
+      if (d.country === 'US') return `$${Number(d.price).toFixed(2)}`;
+      if (d.country === 'JP') return `¥${Math.round(d.price).toLocaleString()}`;
+      return `${d.price.toLocaleString()}원`;
+    }
+    function fmtMcap(d) {
+      if (d.country === 'US') return `$${d.marcap_usd}B`;
+      if (d.country === 'JP') return `¥${Math.round((d.marcap_calc || 0) / 100).toLocaleString()}억`;
+      return `${d.marcap.toLocaleString()}억`;
+    }
     function fmtCap(v, d) {
       if (v === null || v === undefined) return '—';
-      const unit = (d && d.country === 'US') ? 'M$' : '억';
-      return `${Math.round(v).toLocaleString()}${unit}`;
+      return `${Math.round(v).toLocaleString()}${curOf(d).unit}`;
     }
 
     function renderBadge(text) {
@@ -3370,8 +3459,7 @@
       }
       const candles = unpackCandles(rec[currentPriceTf] || rec.m);
       const st = allData.find(x => x.code === currentPriceCode);
-      const isUs = st && st.country === 'US';
-      const fmt = v => isUs ? `$${v.toLocaleString()}` : `${v.toLocaleString()}원`;
+      const fmt = v => `${curOf(st).pre}${v.toLocaleString()}${curOf(st).suf}`;
 
       const hi = Math.max(...candles.map(c => c.h));
       const lo = Math.min(...candles.map(c => c.l));
@@ -3430,7 +3518,7 @@
             x: { stacked: false, ticks: { color: '#94A3B8', maxTicksLimit: 10, font: { size: 10 } },
                  grid: { display: false } },
             y: { ticks: { color: '#94A3B8', font: { size: 10 },
-                          callback: v => isUs ? `$${v}` : v.toLocaleString() },
+                          callback: v => `${curOf(st).pre}${v.toLocaleString()}` },
                  grid: { color: 'rgba(148,163,184,0.08)' } }
           }
         }
@@ -3450,7 +3538,7 @@
     // 타짱 카드: 유형·점수·목표 시총·분기 손익·경고
     function tjCard(d) {
       const t = d.tajjang || { verdict: '판단불가' };
-      const unit = d.country === 'US' ? 'M$' : '억';
+      const unit = curOf(d).unit;
       const nz = (v, suf = '') => (v === null || v === undefined) ? '—' : `${v}${suf}`;
       const lines = [];
       if (t.type) lines.push(`${t.type}${(t.types || []).length > 1 ? ` (+${t.types.filter(x => x !== t.type).join('·')})` : ''} · 정량 ${nz(t.score, '점')}${t.raw != null ? ` (${t.raw}/${t.raw_max})` : ''}`);
@@ -3486,30 +3574,30 @@
       else if (cagr === 0.0) cagrStr = d.dy > 0 ? '동결' : '무배당';
       else if (cagr < 0) cagrStr = `${cagr}%/연`;
 
-      const priceStr = d.country === 'US' ? `$${d.price.toFixed(2)}` : `${d.price.toLocaleString()}원`;
-      const marcapStr = d.country === 'US' ? `$${d.marcap_usd}B (약 ${d.marcap.toLocaleString()}억원)` : `시가총액 ${d.marcap.toLocaleString()}억원`;
-      const curr = d.country === 'US' ? '$' : '원';
+      const priceStr = fmtPrice(d);
+      const marcapStr = d.country === 'KR' ? `시가총액 ${d.marcap.toLocaleString()}억원` : `${fmtMcap(d)} (약 ${d.marcap.toLocaleString()}억원)`;
+      const curr = { KR: '원', US: '$', JP: '¥' }[d.country] || '원';
 
       const totalYieldStr = d.total_yield !== undefined ? `${d.total_yield}%` : `${d.dy}%`;
       const burnRateStr = d.burn_rate !== undefined ? `${d.burn_rate > 0 ? '+' : ''}${d.burn_rate}%` : '-';
 
       document.getElementById('m-meta-line').textContent = 
-        `${d.market} (${d.country === 'US' ? '미국' : '한국'}) | 현재가 ${priceStr} | ${marcapStr} | PER ${d.per}배 | PBR ${d.pbr}배 | 배당수익률 ${d.dy}% | 총환원율 ${totalYieldStr} | 1년 소각률 ${burnRateStr} | 3년배당성장 ${cagrStr} | 10년평균 ROE ${d.roe}%`;
+        `${d.market} (${curOf(d).name}) | 현재가 ${priceStr} | ${marcapStr} | PER ${d.per}배 | PBR ${d.pbr}배 | 배당수익률 ${d.dy}% | 총환원율 ${totalYieldStr} | 1년 소각률 ${burnRateStr} | 3년배당성장 ${cagrStr} | 10년평균 ROE ${d.roe}%`;
 
       // 차트 상단 배당성장 배지
       const badgeEl = document.getElementById('m-cagr-badge');
       if (cagr === 999.0) {
         badgeEl.innerHTML = `<span class="badge" style="background:rgba(37,99,235,0.2); color:#60A5FA; border:1px solid rgba(59,130,246,0.4);">✨ 3개년 신규 배당 개시</span>`;
       } else if (cagr > 0) {
-        const sValStr = curr === '$' ? `$${d.dps_start_val}` : `${d.dps_start_val.toLocaleString()}원`;
-        const eValStr = curr === '$' ? `$${d.dps_end_val}` : `${d.dps_end_val.toLocaleString()}원`;
+        const sValStr = `${curOf(d).pre}${d.dps_start_val.toLocaleString()}${curOf(d).suf}`;
+        const eValStr = `${curOf(d).pre}${d.dps_end_val.toLocaleString()}${curOf(d).suf}`;
         badgeEl.innerHTML = `<span class="badge" style="background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.35);">📈 3년 배당성장: +${cagr}%/연 (${d.dps_start_yr}년 ${sValStr} → ${d.dps_end_yr}년 ${eValStr})</span>`;
       } else if (cagr === 0.0 && d.dy > 0) {
-        const eValStr = curr === '$' ? `$${d.dps_end_val}` : `${d.dps_end_val.toLocaleString()}원`;
+        const eValStr = `${curOf(d).pre}${d.dps_end_val.toLocaleString()}${curOf(d).suf}`;
         badgeEl.innerHTML = `<span class="badge" style="background:#1E293B; color:#94A3B8;">⏸️ 3년 배당 동결 (${eValStr} 유지)</span>`;
       } else if (cagr < 0 && cagr > -100.0) {
-        const sValStr = curr === '$' ? `$${d.dps_start_val}` : `${d.dps_start_val.toLocaleString()}원`;
-        const eValStr = curr === '$' ? `$${d.dps_end_val}` : `${d.dps_end_val.toLocaleString()}원`;
+        const sValStr = `${curOf(d).pre}${d.dps_start_val.toLocaleString()}${curOf(d).suf}`;
+        const eValStr = `${curOf(d).pre}${d.dps_end_val.toLocaleString()}${curOf(d).suf}`;
         badgeEl.innerHTML = `<span class="badge" style="background:rgba(239,68,68,0.15); color:#EF4444;">📉 3년 배당 삭감: ${cagr}%/연 (${d.dps_start_yr}년 ${sValStr} → ${d.dps_end_yr}년 ${eValStr})</span>`;
       } else {
         badgeEl.innerHTML = '';
@@ -3526,9 +3614,7 @@
           return `<span title="${g.name}: ${g.why}">${mark}${g.gate}</span>`;
         }).join(' ');
       };
-      const netCashDisplay = (d.kiyohara.net_cash == null) ? '—'
-        : (d.country === 'US' ? `${Math.round(d.kiyohara.net_cash).toLocaleString()}M$`
-                              : `${Math.round(d.kiyohara.net_cash).toLocaleString()}억`);
+      const netCashDisplay = (d.kiyohara.net_cash == null) ? '—' : fmtCap(d.kiyohara.net_cash, d);
       evalGrid.innerHTML = `
         <div class="eval-card">
           <div class="eval-master">🎩 워런 버핏</div>
@@ -3578,7 +3664,7 @@
       // 10개년 재무 시계열 표 렌더링
       const sTable = document.getElementById('series-table');
       const yrs = d.years;
-      const opUnit = d.country === 'US' ? '억 달러' : '억원';
+      const opUnit = curOf(d).seriesUnit;
       
       const burnRow = (d.burn_series && d.burn_series.length > 0) ? `
         <tr>
@@ -3604,11 +3690,11 @@
         <tbody>
           <tr>
             <td>주당배당금 (DPS, ${curr})</td>
-            ${d.dps_series.map(v => `<td style="color:#10B981; font-weight:600;">${curr === '$' ? '$' : ''}${v.toLocaleString()}${curr === '원' ? '원' : ''}</td>`).join('')}
+            ${d.dps_series.map(v => `<td style="color:#10B981; font-weight:600;">${curOf(d).pre}${v.toLocaleString()}${curOf(d).suf}</td>`).join('')}
           </tr>
           <tr>
             <td>주당순이익 (EPS, ${curr})</td>
-            ${d.eps_series.map(v => `<td>${curr === '$' ? '$' : ''}${v.toLocaleString()}${curr === '원' ? '원' : ''}</td>`).join('')}
+            ${d.eps_series.map(v => `<td>${curOf(d).pre}${v.toLocaleString()}${curOf(d).suf}</td>`).join('')}
           </tr>
           <tr>
             <td>배당성향 (%)</td>
@@ -3645,7 +3731,7 @@
       }
 
       const isUs = (d.country === 'US');
-      const curr = isUs ? '$' : '원';
+      const curr = { KR: '원', US: '$', JP: '¥' }[d.country] || '원';
       const legendBox = document.getElementById('chart-legend-box');
 
       if (currentChartTab === 'shares_burn') {
@@ -3794,8 +3880,8 @@
                 boxPadding: 6,
                 callbacks: {
                   label: function(context) {
-                    const prefix = isUs ? '$' : '';
-                    const suffix = isUs ? '' : '원';
+                    const prefix = curOf(d).pre;
+                    const suffix = curOf(d).suf;
                     return ` ${context.dataset.label}: ${prefix}${context.parsed.y.toLocaleString()}${suffix}`;
                   }
                 }

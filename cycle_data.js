@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-09-21 13:08
-window.CYCLE_UPDATED = "2026-09-21 13:06";
+// 생성 시각: 2026-09-21 15:42
+window.CYCLE_UPDATED = "2026-09-21 15:38";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
@@ -152,23 +152,23 @@ window.CYCLE_DATA = {
   "icon": "🚢",
   "indicator_name": "BDI 건화물선 운임지수",
   "unit": "pt",
-  "current_val": 3336.0,
-  "as_of": "2026-09-17",
+  "current_val": 3370.0,
+  "as_of": "2026-09-18",
   "source": "코리아쉬핑가제트 공개 데이터",
   "yoy": null,
   "percentile": null,
   "inverted": false,
   "thin_data": true,
-  "points": 22,
-  "span": "2026-08-18 ~ 2026-09-17",
+  "points": 23,
+  "span": "2026-08-18 ~ 2026-09-18",
   "status_badge": "자료 쌓이는 중",
   "status_color": "#94A3B8",
-  "current_comment": "최근값 3,336 pt (2026-09-17 기준). 아직 22개 값(2026-08-18~2026-09-17)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
+  "current_comment": "최근값 3,370 pt (2026-09-18 기준). 아직 23개 값(2026-08-18~2026-09-18)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
   "leader_principle": "해운업의 바닥은 수요가 아니라 '폐선(공급 감소)'이 만든다. 벌크선, 탱커선, 컨테이너선의 업황 주기를 엄격히 분리해 보아야 한다.",
   "historical_bottom": {
    "min": 2791.0,
    "max": 2882.0,
-   "label": "관측 구간(2026-08-18~2026-09-17) 하위 20% 구간"
+   "label": "관측 구간(2026-08-18~2026-09-18) 하위 20% 구간"
   },
   "bottom_band_val": 2882.0,
   "break_even": null,
@@ -202,7 +202,8 @@ window.CYCLE_DATA = {
     "2026-09-14",
     "2026-09-15",
     "2026-09-16",
-    "2026-09-17"
+    "2026-09-17",
+    "2026-09-18"
    ],
    "values": [
     2815.0,
@@ -226,7 +227,8 @@ window.CYCLE_DATA = {
     3445.0,
     3360.0,
     3327.0,
-    3336.0
+    3336.0,
+    3370.0
    ],
    "bottom_band_val": 2882.0
   },
