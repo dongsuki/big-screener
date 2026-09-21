@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>거장의 렌즈 — 8대 투자 대가 통합 스크리너</title>
+  <title>거장의 렌즈 — 9대 투자 대가 통합 스크리너</title>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- Google Fonts -->
@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202609202113"></script>
-  <script src="cycle_data.js?v=202609202113"></script>
+  <script src="screener_data.js?v=202609211308"></script>
+  <script src="cycle_data.js?v=202609211308"></script>
 
   <style>
     :root {
@@ -162,6 +162,10 @@
     .nav-item[data-master="kiyohara"].active {
       background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
       border-color: #2DD4BF;
+    }
+    .nav-item[data-master="tajjang"].active {
+      background: linear-gradient(135deg, #1E3A8A 0%, #0369A1 100%);
+      border-color: #38BDF8;
     }
     .nav-item[data-master="siegel"].active {
       background: linear-gradient(135deg, #831843 0%, #BE185D 100%);
@@ -1289,7 +1293,7 @@
           <div>
             <h1>거장의 렌즈</h1>
             <div class="brand-sub">
-              <span>8대 거장 글로벌 통합 스크리너</span>
+              <span>9대 거장 글로벌 통합 스크리너</span>
             </div>
           </div>
         </div>
@@ -1321,7 +1325,7 @@
           <span class="nav-icon">🌟</span>
           <div class="nav-text">
             <span class="nav-title">다중 거장 통과</span>
-            <span class="nav-desc">8인·7인·6인·5인 통합 교집합</span>
+            <span class="nav-desc">9인·8인·7인·6인 통합 교집합</span>
           </div>
         </button>
 
@@ -1338,7 +1342,7 @@
         <div class="nav-divider" id="cycle-nav-divider" style="display:none;">업종 사이클</div>
         <div id="cycle-nav-list" style="display:none; flex-direction:column; gap:4px;"></div>
 
-        <div class="nav-divider" id="master-nav-divider">8대 거장 렌즈</div>
+        <div class="nav-divider" id="master-nav-divider">9대 거장 렌즈</div>
 
         <button class="nav-item active" data-master="buffett">
           <span class="nav-icon">🎩</span>
@@ -1385,6 +1389,14 @@
           <div class="nav-text">
             <span class="nav-title">기요하라 다쓰로</span>
             <span class="nav-desc">넷넷 순현금 · 현금중립 PER</span>
+          </div>
+        </button>
+
+        <button class="nav-item" data-master="tajjang">
+          <span class="nav-icon">⚓</span>
+          <div class="nav-text">
+            <span class="nav-title">타짱</span>
+            <span class="nav-desc">적자 바닥 시클리컬 · PER 5배 목표</span>
           </div>
         </button>
 
@@ -1477,6 +1489,7 @@
           <button type="button" class="combo-chip" data-master="리더">🏗️ 07leader</button>
           <button type="button" class="combo-chip" data-master="기요하라">🍶 기요하라 다쓰로</button>
           <button type="button" class="combo-chip" data-master="시겔">📚 제러미 시겔</button>
+          <button type="button" class="combo-chip" data-master="타짱">⚓ 타짱</button>
           <button type="button" class="combo-chip" data-master="미너비니">⚡ 마크 미너비니</button>
         </div>
 
@@ -1486,6 +1499,7 @@
           <button type="button" class="preset-btn" data-preset="버핏,미너비니">🚀 가치+모멘텀 (버핏+미너비니)</button>
           <button type="button" class="preset-btn" data-preset="오일,시겔">💎 배당+소각 (오일+시겔)</button>
           <button type="button" class="preset-btn" data-preset="리더,기요하라">🍶 딥밸류 턴어라운드 (리더+기요하라)</button>
+          <button type="button" class="preset-btn" data-preset="타짱,리더">⚓ 사이클 바닥 (타짱+리더)</button>
           <button type="button" class="preset-btn" data-preset="버핏,린치">📈 정통 가치성장 (버핏+린치)</button>
           <button type="button" class="preset-btn" data-preset="버핏,오일,시겔">👑 3대 배당가치 (버핏+오일+시겔)</button>
           <div class="preset-actions">
@@ -1664,7 +1678,7 @@
               <span id="cycle-table-title">업종 대표주 10년 체력 검증</span>
             </div>
             <div class="cycle-card-sub">
-              종목을 클릭하면 10년 EPS/배당 차트, 주식수 소각률, 8대 거장 동시 평가를 확인합니다.
+              종목을 클릭하면 10년 EPS/배당 차트, 주식수 소각률, 9대 거장 동시 평가를 확인합니다.
             </div>
           </div>
           <div style="font-size: 12px; color: var(--accent-gold); font-weight: 600;">
@@ -1686,7 +1700,7 @@
                 <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">총환원율</th>
                 <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">10년 무적자</th>
                 <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">부채비율</th>
-                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">8대 거장 통과 현황</th>
+                <th style="padding:9px 12px; background:#1B2230; color:#94A3B8; font-size:12px; font-weight:700;">9대 거장 통과 현황</th>
               </tr>
             </thead>
             <tbody id="cycle-stocks-tbody">
@@ -1753,10 +1767,10 @@
           </div>
         </div>
 
-        <!-- 8대 거장 종합 채점표 -->
+        <!-- 9대 거장 종합 채점표 -->
         <div>
           <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">
-            🏆 8대 거장 동시 채점 스코어카드
+            🏆 9대 거장 동시 채점 스코어카드
           </h4>
           <div class="eval-grid" id="eval-grid">
             <!-- 동적 삽입 -->
@@ -1817,12 +1831,12 @@
         name: '전종목 자유 탐색기',
         icon: '🔍',
         bannerTitle: '🔍 한·미 전종목 자유 탐색기',
-        bannerDesc: '8대 거장의 통과/탈락 기준에 구애받지 않고, 한국·미국 전종목을 검색하여 거장 채점 결과와 배당·환원·소각 펀더멘털을 자유롭게 확인합니다.',
+        bannerDesc: '9대 거장의 통과/탈락 기준에 구애받지 않고, 한국·미국 전종목을 검색하여 거장 채점 결과와 배당·환원·소각 펀더멘털을 자유롭게 확인합니다.',
         statLabel: '표시 종목',
         verdicts: ['전체 (무제한)', '거장 1인+ 통과', '거장 2인+ 통과', '거장 3인+ 통과', '거장 5인+ 통과', '거장 미통과(자유탐색)'],
         criteria: [
           { badge: '자유 검색', color: '#3B82F6', desc: '한국·미국 상장기업 중 원하는 종목명이나 티커코드를 실시간 검색' },
-          { badge: '종목 클릭', color: '#10B981', desc: '종목 클릭 시 10년 EPS/배당 차트 + 주식수/소각률 차트 + 8대 거장 동시 채점표 확인' },
+          { badge: '종목 클릭', color: '#10B981', desc: '종목 클릭 시 10년 EPS/배당 차트 + 주식수/소각률 차트 + 9대 거장 동시 채점표 확인' },
           { badge: '환원·소각 필터', color: '#F59E0B', desc: '배당수익률, 총환원율, 실질 주식 소각률, 연속 소각 연수로 자유 스크리닝' }
         ],
         getVerdict: d => {
@@ -2024,6 +2038,55 @@
           { key: 'pbr', label: 'PBR', sort: d => d.pbr, render: d => d.pbr == null ? '—' : d.pbr }
         ]
       },
+      tajjang: {
+        name: '타짱',
+        icon: '⚓',
+        bannerTitle: '⚓ 타짱의 3대 가치주 스크리너 — 시클리컬 80% · 자산 10% · 수익 10%',
+        bannerDesc: '📕 『부자 아빠 투자 불변의 법칙』 원문 기준. 종목을 <b>시클리컬·자산가치·수익가치</b> 중 해당하는 서랍으로 가른 뒤 그 서랍의 잣대로 100점 환산한다. 시클리컬은 <b>2년 연속 적자</b>가 최적, 목표 시총 = <b>과거 최고 순이익 × PER 5배</b>. 흑자 전환 징조(수량·설비투자·단가)와 숨은 토지 등 정성 항목은 채점에서 제외 — 사이클 레이더와 함께 볼 것.',
+        statLabel: '매수 재료',
+        verdicts: ['매수 재료', '기다린다', '기준 미달', '제외 (증자 이력)', '영역 밖', '판단불가'],
+        criteria: [
+          { badge: '매수 재료', color: '#10B981', desc: '해당 유형 정량 환산 75점 이상 — 흑자 전환 근거를 한 문장으로 말할 수 있으면 검토' },
+          { badge: '기다린다', color: '#F59E0B', desc: '50~74점 — 서랍은 맞지만 타이밍·근거 부족' },
+          { badge: '기준 미달', color: '#EF4444', desc: '50점 미만 (시클리컬인데 상당한 흑자 중이면 여기로 간다)' },
+          { badge: '제외 (증자 이력)', color: '#EF4444', desc: '📕 "증자를 하는 기업의 주식은 사지 않는다" — ⚙️ 최근 3년 신주 발행이 시총의 2% 이상' },
+          { badge: '영역 밖', color: '#64748B', desc: '세 서랍 어디에도 해당하지 않음 (성장주 등 — 미너비니·린치 렌즈로)' },
+          { badge: '판단불가', color: '#64748B', desc: '5년 이상 실적이 없음' }
+        ],
+        getVerdict: d => d.tajjang ? d.tajjang.verdict : '판단불가',
+        customCols: [
+          { key: 'tj_verdict', label: '타짱 판정', render: d => renderBadge(d.tajjang ? d.tajjang.verdict : '판단불가') },
+          { key: 'tj_type', label: '유형 📕', sort: d => (d.tajjang && d.tajjang.type) || '',
+            render: d => {
+              const t = d.tajjang || {};
+              if (!t.type) return '—';
+              const more = (t.types || []).filter(x => x !== t.type).map(x => x.replace('가치주', ''));
+              return `<strong>${t.type.replace('가치주', '')}</strong>${more.length ? ` <span style="color:#64748B">+${more.join('·')}</span>` : ''}`;
+            } },
+          { key: 'tj_score', label: '정량 점수', sort: d => d.tajjang ? d.tajjang.score : null,
+            render: d => (!d.tajjang || d.tajjang.score == null) ? '—' : `<strong>${d.tajjang.score}</strong>점` },
+          { key: 'tj_upside', label: '목표시총 ÷ 현재 📕', sort: d => d.tajjang ? d.tajjang.upside_x : null,
+            render: d => {
+              const x = d.tajjang && d.tajjang.upside_x;
+              if (x == null) return '—';
+              return x >= 2 ? `<strong style="color:#10B981">${x}배</strong>` : `${x}배`;
+            } },
+          { key: 'tj_psr', label: 'PSR 📕', sort: d => d.tajjang ? d.tajjang.psr : null,
+            render: d => {
+              const p = d.tajjang && d.tajjang.psr;
+              if (p == null) return '—';
+              return p <= 0.5 ? `<strong style="color:#10B981">${p}</strong>` : p;
+            } },
+          { key: 'tj_loss', label: '10년 적자', sort: d => d.tajjang ? d.tajjang.loss_years : null,
+            render: d => (d.tajjang && d.tajjang.loss_years != null) ? `${d.tajjang.loss_years}회` : '—' },
+          { key: 'tj_q', label: '최근 분기 영업손익', sort: d => (d.tajjang && d.tajjang.q_op) ? d.tajjang.q_op[d.tajjang.q_op.length - 1] : null,
+            render: d => {
+              const q = d.tajjang && d.tajjang.q_op;
+              if (!q || !q.length) return '—';
+              return q.slice(-3).map(v => `<span style="color:${v < 0 ? '#3B82F6' : '#EF4444'}">${Math.round(v).toLocaleString()}</span>`).join(' → ');
+            } }
+        ]
+      },
       siegel: {
         name: '제러미 시겔',
         icon: '📚',
@@ -2086,19 +2149,20 @@
       multipass: {
         name: '다중 거장 통과',
         icon: '🌟',
-        bannerTitle: '🌟 8대 거장 다중 통과 (교집합) 스크리너',
-        bannerDesc: '버핏, 린치, 오일, VIP, 07leader, 기요하라, 시겔, 미너비니 중 2인 이상 복수 거장의 렌즈를 동시 통과한 엄선 종목',
+        bannerTitle: '🌟 9대 거장 다중 통과 (교집합) 스크리너',
+        bannerDesc: '버핏, 린치, 오일, VIP, 07leader, 기요하라, 타짱, 시겔, 미너비니 중 2인 이상 복수 거장의 렌즈를 동시 통과한 엄선 종목',
         statLabel: '다중 통과',
-        verdicts: ['8인 전원 통과', '7인 통과', '6인 통과', '5인 통과', '4인 통과', '3인 통과', '2인 통과'],
+        verdicts: ['9인 전원 통과', '8인 통과', '7인 통과', '6인 통과', '5인 통과', '4인 통과', '3인 통과', '2인 통과'],
         criteria: [
-          { badge: '8인 전원 통과', color: '#EC4899', desc: '버핏·린치·오일·VIP·리더·기요하라·시겔·미너비니 8인의 철학을 모두 통과한 무결점 가치성장주' },
-          { badge: '7인 통과', color: '#F59E0B', desc: '8개 거장 중 7인의 관문을 통과한 극소수 초우량주' },
+          { badge: '9인 전원 통과', color: '#EC4899', desc: '버핏·린치·오일·VIP·리더·기요하라·타짱·시겔·미너비니 9인의 철학을 모두 통과' },
+          { badge: '8인 / 7인 통과', color: '#F59E0B', desc: '9개 거장 중 7~8인의 관문을 통과한 극소수 종목' },
           { badge: '6인 / 5인 통과', color: '#A855F7', desc: '복수 거장들의 철학이 만장일치로 일치한 종목군' },
           { badge: '4인 / 3인 / 2인', color: '#3B82F6', desc: '복수 거장의 안전마진 교집합 종목군' }
         ],
         getVerdict: d => {
           const cnt = getPassedMasters(d).length;
-          if (cnt === 8) return '8인 전원 통과';
+          if (cnt === 9) return '9인 전원 통과';
+          if (cnt === 8) return '8인 통과';
           if (cnt === 7) return '7인 통과';
           if (cnt === 6) return '6인 통과';
           if (cnt === 5) return '5인 통과';
@@ -2110,7 +2174,7 @@
         customCols: [
           { key: 'pass_count', label: '통과 거장 수', render: d => {
             const p = getPassedMasters(d);
-            const color = p.length === 8 ? '#EC4899' : (p.length >= 6 ? '#F59E0B' : (p.length >= 4 ? '#A855F7' : (p.length >= 3 ? '#3B82F6' : '#10B981')));
+            const color = p.length >= 8 ? '#EC4899' : (p.length >= 6 ? '#F59E0B' : (p.length >= 4 ? '#A855F7' : (p.length >= 3 ? '#3B82F6' : '#10B981')));
             return `<span class="badge" style="background:${color}22; color:${color}; border:1px solid ${color}66; font-size:12px; font-weight:800;">${p.length}인 통과</span>`;
           }},
           { key: 'passed_masters', label: '통과 거장 조합', render: d => {
@@ -2134,6 +2198,7 @@
       if (d.leader && d.leader.verdict === '길목 선취매') p.push('리더');
       if (d.kiyohara && (d.kiyohara.verdict === '넷넷 초저평가' || d.kiyohara.verdict === '순현금 우량')) p.push('기요하라');
       if (d.siegel && (d.siegel.verdict === '배당퀄리티 최상위' || d.siegel.verdict === '배당퀄리티 우량')) p.push('시겔');
+      if (d.tajjang && d.tajjang.verdict === '매수 재료') p.push('타짱');
       if (d.minervini && d.minervini.passed) p.push('미너비니');
       return p;
     }
@@ -3185,6 +3250,7 @@
         leader: ['길목 선취매'],
         kiyohara: ['넷넷 초저평가', '순현금 우량'],
         siegel: ['배당퀄리티 최상위', '배당퀄리티 우량'],
+        tajjang: ['매수 재료'],
         minervini: ['🚀 2단계 상승']
       };
       if (currentMaster === 'all') topCount = list.length;
@@ -3238,16 +3304,16 @@
 
     function renderBadge(text) {
       if (!text) return '-';
-      if (text.includes('판단불가') || text.includes('데이터') || text.includes('불러오기 실패') || text.includes('대상 아님')) {
+      if (text.includes('판단불가') || text.includes('데이터') || text.includes('불러오기 실패') || text.includes('대상 아님') || text === '영역 밖') {
         return `<span class="badge" style="background:#1E293B; color:#94A3B8; border:1px solid #334155;">${text}</span>`;
       }
       if (text.includes('가격 대기')) {
         return `<span class="badge" style="background:#0C4A6E; color:#7DD3FC; border:1px solid #0369A1;">${text}</span>`;
       }
-      if (text.includes('통과') || text.includes('매우 유망') || text.includes('적극') || text.includes('길목') || text.includes('최상위') || text.includes('넷넷') || text.startsWith('A ') || text.includes('2단계 상승')) {
+      if (text.includes('통과') || text.includes('매우 유망') || text.includes('적극') || text.includes('길목') || text.includes('최상위') || text.includes('넷넷') || text.startsWith('A ') || text.includes('2단계 상승') || text === '매수 재료') {
         return `<span class="badge badge-pass">${text}</span>`;
       }
-      if (text.includes('공정가치') || text.includes('검토') || text.includes('분할') || text.includes('우량') || text.startsWith('B ') || text.includes('추세 형성')) {
+      if (text.includes('공정가치') || text.includes('검토') || text.includes('분할') || text.includes('우량') || text.startsWith('B ') || text.includes('추세 형성') || text === '기다린다') {
         return `<span class="badge badge-wait">${text}</span>`;
       }
       if (text.includes('보통') || text.includes('유지') || text.includes('관찰') || text.includes('대기') || text.startsWith('C ')) {
@@ -3381,6 +3447,32 @@
     }
 
 
+    // 타짱 카드: 유형·점수·목표 시총·분기 손익·경고
+    function tjCard(d) {
+      const t = d.tajjang || { verdict: '판단불가' };
+      const unit = d.country === 'US' ? 'M$' : '억';
+      const nz = (v, suf = '') => (v === null || v === undefined) ? '—' : `${v}${suf}`;
+      const lines = [];
+      if (t.type) lines.push(`${t.type}${(t.types || []).length > 1 ? ` (+${t.types.filter(x => x !== t.type).join('·')})` : ''} · 정량 ${nz(t.score, '점')}${t.raw != null ? ` (${t.raw}/${t.raw_max})` : ''}`);
+      else if (t.verdict === '영역 밖') lines.push('시클리컬·자산가치·수익가치 어디에도 해당하지 않음');
+      if (t.upside_x != null) lines.push(`목표 시총(최고 순이익 ${Math.round(t.peak_ni).toLocaleString()}${unit} × 5) = ${Math.round(t.target_cap).toLocaleString()}${unit} → 현재의 ${t.upside_x}배`);
+      if (t.psr != null) lines.push(`PSR ${t.psr}배${t.loss_years != null ? ` · 10년 중 적자 ${t.loss_years}회` : ''}`);
+      if (t.ncr != null) lines.push(`순현금 ${Math.round(t.net_cash).toLocaleString()}${unit} (시총의 ${t.ncr}%)`);
+      if (t.q_op && t.q_op.length) lines.push(`분기 영업손익(${unit}): ` + t.q_op.map((v, i) => `${(t.q_labels || [])[i] || ''} ${Math.round(v).toLocaleString()}`).join(' → '));
+      if (t.ordinary != null) lines.push(`경상이익(한국판) ${Math.round(t.ordinary).toLocaleString()}${unit} · 순금융손익 ${Math.round(t.fin_net).toLocaleString()}${unit}`);
+      (t.risks || []).forEach(r => lines.push(`⛔ ${r}`));
+      (t.notes || []).forEach(r => lines.push(`⚠️ ${r}`));
+      if (t.from_parent) lines.push('우선주 — 본주 기준 판정');
+      const items = (t.items || []).map(it => `<div title="${it.desc || ''}">${it.origin === 'book' ? '📕' : (it.origin === 'rule' ? '📋' : '⚙️')} ${it.name} <strong>${it.got}/${it.full}</strong></div>`).join('');
+      return `
+        <div class="eval-card">
+          <div class="eval-master">⚓ 타짱</div>
+          <div class="eval-verdict">${renderBadge(t.verdict)}</div>
+          ${lines.map(l => `<div class="eval-desc">${l}</div>`).join('')}
+          ${items ? `<div class="eval-desc" style="margin-top:4px; font-size:11px; color:#94A3B8">${items}</div>` : ''}
+        </div>`;
+    }
+
     // ── 상세 모달 오픈 ─────────────────────────
     function openDetailModal(d) {
       document.getElementById('m-name-code').textContent = `${d.name} (${d.code})`;
@@ -3423,7 +3515,7 @@
         badgeEl.innerHTML = '';
       }
 
-      // 8대 거장 평가 카드 그리드 채우기
+      // 9대 거장 평가 카드 그리드 채우기
       const evalGrid = document.getElementById('eval-grid');
       // 값이 없으면 숫자를 지어내지 않고 '데이터 없음'이라고 적는다
       const nz = (v, suf = '') => (v === null || v === undefined) ? '—' : `${v}${suf}`;
@@ -3475,6 +3567,7 @@
           <div class="eval-verdict">${renderBadge(d.siegel.verdict)}</div>
           <div class="eval-desc">퀄리티 ${nz(d.siegel.score, '점')} · ROA ${nz(d.siegel.roa, '%')} · 배당성향 ${nz(d.payout, '%')}</div>
         </div>
+        ${tjCard(d)}
         <div class="eval-card">
           <div class="eval-master">⚡ 마크 미너비니</div>
           <div class="eval-verdict">${renderBadge(d.minervini ? d.minervini.verdict : '기준 미달')}</div>

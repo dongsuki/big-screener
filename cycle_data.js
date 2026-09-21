@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-09-20 21:13
-window.CYCLE_UPDATED = "2026-09-20 21:11";
+// 생성 시각: 2026-09-21 13:08
+window.CYCLE_UPDATED = "2026-09-21 13:06";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
