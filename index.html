@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202609211542"></script>
-  <script src="cycle_data.js?v=202609211542"></script>
+  <script src="screener_data.js?v=202609270754"></script>
+  <script src="cycle_data.js?v=202609270754"></script>
 
   <style>
     :root {
@@ -1916,7 +1916,7 @@
           { key: 'buffett_verdict', label: '버핏 판정', render: d => renderBadge(d.buffett.verdict) },
           { key: 'buffett_pass_cnt', label: '통과 관문', sort: d => (d.buffett.pass_cnt ?? -1),
             render: d => d.buffett.judged ? `${d.buffett.pass_cnt} / ${d.buffett.judged}개` : '<span style="color:#64748B">데이터 부족</span>' },
-          { key: 'roe', label: '10년 평균 ROE', sort: d => d.roe, render: d => fmtPct(d.roe) },
+          { key: 'roe', label: '10년 평균 ROE', sort: d => (d.avg_roe ?? d.roe), render: d => fmtPct(d.avg_roe ?? d.roe) },
           { key: 'safety_margin', label: '바닥가치 대비 할인 ⚙️', sort: d => d.buffett.safety_margin,
             render: d => d.buffett.safety_margin == null ? '<span style="color:#64748B">—</span>'
               : (d.buffett.safety_margin > 0 ? `<strong style="color:#10B981">+${d.buffett.safety_margin}%</strong>` : `<span style="color:#94A3B8">${d.buffett.safety_margin}%</span>`) },
@@ -2074,7 +2074,7 @@
         name: '타짱',
         icon: '⚓',
         bannerTitle: '⚓ 타짱의 3대 가치주 스크리너 — 시클리컬 80% · 자산 10% · 수익 10%',
-        bannerDesc: '📕 『부자 아빠 투자 불변의 법칙』 원문 기준. 종목을 <b>시클리컬·자산가치·수익가치</b> 중 해당하는 서랍으로 가른 뒤 그 서랍의 잣대로 100점 환산한다. 시클리컬은 <b>2년 연속 적자</b>가 최적, 목표 시총 = <b>과거 최고 순이익 × PER 5배</b>. 흑자 전환 징조(수량·설비투자·단가)와 숨은 토지 등 정성 항목은 채점에서 제외 — 사이클 레이더와 함께 볼 것.',
+        bannerDesc: '📕 『부자 아빠 투자 불변의 법칙』 원문 기준. 종목을 <b>시클리컬·자산가치·수익가치</b> 중 해당하는 서랍으로 가른 뒤 그 서랍의 잣대로 100점 환산한다. 시클리컬은 <b>원자재 업종</b>에서 <b>2년 연속 적자</b>(책의 경상이익 기준 — 손상차손 같은 특별손실은 적자로 세지 않음)가 최적, 목표 시총 = <b>과거 최고 이익(특별손익 제외) × PER 5배</b>. 흑자 전환 징조(수량·설비투자·단가)와 숨은 토지 등 정성 항목은 채점에서 제외 — 사이클 레이더와 함께 볼 것.',
         statLabel: '매수 재료',
         verdicts: ['매수 재료', '기다린다', '기준 미달', '제외 (증자 이력)', '영역 밖', '판단불가'],
         criteria: [
@@ -2215,7 +2215,7 @@
               p.map(m => `<span class="badge" style="background:#1E293B; color:#CBD5E1; padding:2px 6px; font-size:11px;">${m}</span>`).join('') +
               `</div>`;
           }},
-          { key: 'roe', label: '10년 평균 ROE', render: d => `${d.roe}%` }
+          { key: 'roe', label: '10년 평균 ROE', render: d => `${d.avg_roe ?? d.roe}%` }
         ]
       }
     };
@@ -3544,7 +3544,7 @@
       const lines = [];
       if (t.type) lines.push(`${t.type}${(t.types || []).length > 1 ? ` (+${t.types.filter(x => x !== t.type).join('·')})` : ''} · 정량 ${nz(t.score, '점')}${t.raw != null ? ` (${t.raw}/${t.raw_max})` : ''}`);
       else if (t.verdict === '영역 밖') lines.push('시클리컬·자산가치·수익가치 어디에도 해당하지 않음');
-      if (t.upside_x != null) lines.push(`목표 시총(최고 순이익 ${Math.round(t.peak_ni).toLocaleString()}${unit} × 5) = ${Math.round(t.target_cap).toLocaleString()}${unit} → 현재의 ${t.upside_x}배`);
+      if (t.upside_x != null) lines.push(`목표 시총(최고 이익 ${Math.round(t.peak_base ?? t.peak_ni).toLocaleString()}${unit} × 5) = ${Math.round(t.target_cap).toLocaleString()}${unit} → 현재의 ${t.upside_x}배`);
       if (t.psr != null) lines.push(`PSR ${t.psr}배${t.loss_years != null ? ` · 10년 중 적자 ${t.loss_years}회` : ''}`);
       if (t.ncr != null) lines.push(`순현금 ${Math.round(t.net_cash).toLocaleString()}${unit} (시총의 ${t.ncr}%)`);
       if (t.q_op && t.q_op.length) lines.push(`분기 영업손익(${unit}): ` + t.q_op.map((v, i) => `${(t.q_labels || [])[i] || ''} ${Math.round(v).toLocaleString()}`).join(' → '));
@@ -3583,7 +3583,7 @@
       const burnRateStr = d.burn_rate !== undefined ? `${d.burn_rate > 0 ? '+' : ''}${d.burn_rate}%` : '-';
 
       document.getElementById('m-meta-line').textContent = 
-        `${d.market} (${curOf(d).name}) | 현재가 ${priceStr} | ${marcapStr} | PER ${d.per}배 | PBR ${d.pbr}배 | 배당수익률 ${d.dy}% | 총환원율 ${totalYieldStr} | 1년 소각률 ${burnRateStr} | 3년배당성장 ${cagrStr} | 10년평균 ROE ${d.roe}%`;
+        `${d.market} (${curOf(d).name}) | 현재가 ${priceStr} | ${marcapStr} | PER ${d.per}배 | PBR ${d.pbr}배 | 배당수익률 ${d.dy}% | 총환원율 ${totalYieldStr} | 1년 소각률 ${burnRateStr} | 3년배당성장 ${cagrStr} | 10년평균 ROE ${d.avg_roe ?? d.roe}%`;
 
       // 차트 상단 배당성장 배지
       const badgeEl = document.getElementById('m-cagr-badge');
@@ -3691,25 +3691,25 @@
         <tbody>
           <tr>
             <td>주당배당금 (DPS, ${curr})</td>
-            ${d.dps_series.map(v => `<td style="color:#10B981; font-weight:600;">${curOf(d).pre}${v.toLocaleString()}${curOf(d).suf}</td>`).join('')}
+            ${(d.dps_series || []).map(v => v == null ? '<td>—</td>' : `<td style="color:#10B981; font-weight:600;">${curOf(d).pre}${v.toLocaleString()}${curOf(d).suf}</td>`).join('')}
           </tr>
           <tr>
             <td>주당순이익 (EPS, ${curr})</td>
-            ${d.eps_series.map(v => `<td>${curOf(d).pre}${v.toLocaleString()}${curOf(d).suf}</td>`).join('')}
+            ${(d.eps_series || []).map(v => v == null ? '<td>—</td>' : `<td>${curOf(d).pre}${v.toLocaleString()}${curOf(d).suf}</td>`).join('')}
           </tr>
           <tr>
             <td>배당성향 (%)</td>
-            ${d.payout_series.map(v => `<td>${v}%</td>`).join('')}
+            ${(d.payout_series || []).map(v => v == null ? '<td>—</td>' : `<td>${v}%</td>`).join('')}
           </tr>
           ${burnRow}
           ${buybackRow}
           <tr>
             <td>영업이익 (${opUnit})</td>
-            ${d.op_series.map(v => `<td style="${v <= 0 ? 'color:#EF4444;' : ''}">${v.toLocaleString()}</td>`).join('')}
+            ${(d.op_series || []).map(v => v == null ? '<td>-</td>' : `<td style="${v <= 0 ? 'color:#EF4444;' : ''}">${v.toLocaleString()}</td>`).join('')}
           </tr>
           <tr>
             <td>ROE (%)</td>
-            ${d.roe_series.map(v => `<td>${v}%</td>`).join('')}
+            ${(d.roe_series || []).map(v => v == null ? '<td>—</td>' : `<td>${v}%</td>`).join('')}
           </tr>
         </tbody>
       `;
@@ -3730,6 +3730,8 @@
       if (chartInstance) {
         chartInstance.destroy();
       }
+      const leftover = Chart.getChart(canvas);   // 앞 종목에서 오류가 나 남은 차트가 있으면 지운다
+      if (leftover) leftover.destroy();
 
       const isUs = (d.country === 'US');
       const curr = { KR: '원', US: '$', JP: '¥' }[d.country] || '원';
@@ -3742,14 +3744,14 @@
           <div class="legend-item"><div class="dot-line" style="background:#A855F7;"></div><span>총 유통주식수(억 주 꺾은선)</span></div>
         `;
 
-        const burnData = d.burn_series && d.burn_series.length > 0 ? d.burn_series : d.years.map(() => 0);
+        const burnData = d.burn_series && d.burn_series.length > 0 ? d.burn_series : (d.years || []).map(() => 0);
         const sharesRaw = d.shares_series && d.shares_series.length > 0 ? d.shares_series : [];
         const sharesData = sharesRaw.map(v => v ? Number((v / 1e8).toFixed(2)) : null);
 
         chartInstance = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: d.years.map(y => `${y}년`),
+            labels: (d.years || []).map(y => `${y}년`),
             datasets: [
               {
                 type: 'bar',
@@ -3837,7 +3839,7 @@
         chartInstance = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: d.years.map(y => `${y}년`),
+            labels: (d.years || []).map(y => `${y}년`),
             datasets: [
               {
                 type: 'bar',
