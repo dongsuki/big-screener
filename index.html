@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202609280753"></script>
-  <script src="cycle_data.js?v=202609280753"></script>
+  <script src="screener_data.js?v=202609280854"></script>
+  <script src="cycle_data.js?v=202609280854"></script>
 
   <style>
     :root {
@@ -201,6 +201,40 @@
       color: #FFF;
       font-weight: 800;
     }
+    .nav-item[data-master="watch"] {
+      border-color: rgba(236, 72, 153, 0.4);
+      background: rgba(236, 72, 153, 0.08);
+      color: #F9A8D4;
+      margin-bottom: 4px;
+    }
+    .nav-item[data-master="watch"]:hover {
+      background: rgba(236, 72, 153, 0.18);
+      border-color: #F472B6;
+      color: #FFF;
+    }
+    .nav-item[data-master="watch"].active {
+      background: linear-gradient(135deg, #9D174D 0%, #DB2777 100%);
+      border-color: #F9A8D4;
+      color: #FFF;
+      font-weight: 800;
+    }
+    .star-btn {
+      background: none; border: none; cursor: pointer; font-size: 15px;
+      color: #475569; padding: 2px 4px; line-height: 1;
+    }
+    .star-btn.on { color: #FBBF24; }
+    .star-btn:hover { color: #FBBF24; transform: scale(1.15); }
+    .watch-tools {
+      display: none; gap: 8px; flex-wrap: wrap; align-items: center;
+      background: rgba(236,72,153,0.07); border: 1px solid rgba(236,72,153,0.3);
+      border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 14px;
+    }
+    .watch-tools button {
+      background: #1E293B; border: 1px solid #334155; color: #CBD5E1;
+      border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 600;
+    }
+    .watch-tools button:hover { border-color: #F472B6; color: #FFF; }
+    .lens-dot { font-size: 11.5px; font-weight: 700; white-space: nowrap; }
     .nav-item[data-master="multipass"] {
       border-color: rgba(245, 158, 11, 0.35);
       background: rgba(245, 158, 11, 0.08);
@@ -1331,6 +1365,15 @@
           </div>
         </button>
 
+        <!-- 내 관심종목 -->
+        <button class="nav-item" data-master="watch">
+          <span class="nav-icon">⭐</span>
+          <div class="nav-text">
+            <span class="nav-title">내 관심종목</span>
+            <span class="nav-desc" id="watch-nav-desc">별(★)을 누른 종목만 모아보기</span>
+          </div>
+        </button>
+
         <!-- 다중 거장 통과 (최상단 하이라이트) -->
         <button class="nav-item" data-master="multipass">
           <span class="nav-icon">🌟</span>
@@ -1487,6 +1530,15 @@
       </section>
 
       <!-- 다중 거장 통과 전용: 커스텀 거장 조합기 -->
+      <div class="watch-tools" id="watch-tools">
+        <span style="font-size:12px; color:#F9A8D4; font-weight:700;">⭐ 관심종목</span>
+        <span style="font-size:12px; color:#94A3B8;" id="watch-count-label">0개</span>
+        <button type="button" id="watch-copy">목록 복사</button>
+        <button type="button" id="watch-load">목록 불러오기</button>
+        <button type="button" id="watch-clear">전체 비우기</button>
+        <span style="font-size:11.5px; color:#64748B;">이 브라우저에 저장됩니다. 다른 기기에서 보려면 '목록 복사' 후 그 기기에서 '목록 불러오기'</span>
+      </div>
+
       <section class="custom-combo-panel" id="custom-combo-panel" style="display: none;">
         <div class="combo-header">
           <div class="combo-title-area">
@@ -1750,7 +1802,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-title-box">
-          <h3 id="m-name-code">삼성전자 (005930)</h3>
+          <h3 id="m-name-code">삼성전자 (005930)
+            <button class="star-btn" id="m-star-btn" title="관심종목에 담기" style="font-size:20px; vertical-align:middle;">☆</button>
+          </h3>
           <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" id="m-meta-line">
             KOSPI | 현재가 270,000원 | 시가총액 157.8조 | PER 12.1배 | PBR 1.1배 | 배당수익률 0.6%
           </p>
@@ -1848,6 +1902,55 @@
     let cycleCheckedMap = {};
 
     // 거장별 설정 메타데이터
+    // ── 관심종목 (이 브라우저에 저장) ───────────────────────
+    const WATCH_KEY = 'geojang_watchlist_v1';
+    let watchList = new Set();
+    try {
+      watchList = new Set(JSON.parse(localStorage.getItem(WATCH_KEY) || '[]'));
+    } catch (e) { watchList = new Set(); }
+
+    function saveWatch() {
+      try { localStorage.setItem(WATCH_KEY, JSON.stringify([...watchList])); } catch (e) {}
+      const n = watchList.size;
+      const desc = document.getElementById('watch-nav-desc');
+      if (desc) desc.textContent = n ? `${n}개 담김 · 거장 통과 현황 한눈에` : '별(★)을 누른 종목만 모아보기';
+      const lbl = document.getElementById('watch-count-label');
+      if (lbl) lbl.textContent = `${n}개`;
+    }
+
+    function toggleWatch(code) {
+      if (watchList.has(code)) watchList.delete(code); else watchList.add(code);
+      saveWatch();
+    }
+
+    function starCell(code) {
+      const on = watchList.has(code);
+      return `<button class="star-btn ${on ? 'on' : ''}" data-star="${code}" title="${on ? '관심종목에서 빼기' : '관심종목에 담기'}">${on ? '★' : '☆'}</button>`;
+    }
+
+    // 렌즈별 한 칸 표시 (통과=초록 / 중간=주황 / 탈락·대상아님=회색)
+    const LENS = [
+      { key: 'buffett', name: '버핏', pass: ['통과'], mid: ['훌륭한 기업 · 가격 대기', '대기'] },
+      { key: 'lynch', name: '린치', pass: ['매우 유망'], mid: ['공정가치'] },
+      { key: 'oil', name: '오일', pass: ['A (기준 최상위)', 'B (기준 상위)'], mid: ['C (기준 중간)'] },
+      { key: 'vip', name: 'VIP', pass: ['적극 편입'], mid: ['편입 검토', '관찰 대상'] },
+      { key: 'leader', name: '리더', pass: ['길목 선취매'], mid: ['분할 매집', '관찰 대기'] },
+      { key: 'kiyohara', name: '기요하라', pass: ['넷넷 초저평가', '순현금 우량'], mid: ['현금 보통'] },
+      { key: 'tajjang', name: '타짱', pass: ['매수 재료'], mid: ['기다린다'] },
+      { key: 'siegel', name: '시겔', pass: ['배당퀄리티 최상위', '배당퀄리티 우량'], mid: ['배당 유지'] },
+      { key: 'minervini', name: '미너비니', pass: ['🚀 2단계 상승'], mid: ['📈 추세 형성'] }
+    ];
+
+    function lensCell(d, lens) {
+      const r = d[lens.key] || {};
+      const v = r.verdict || '판단불가';
+      if (lens.pass.includes(v)) return `<span class="lens-dot" style="color:#10B981" title="${v}">● 통과</span>`;
+      if (lens.mid.includes(v)) return `<span class="lens-dot" style="color:#F59E0B" title="${v}">◐ 근접</span>`;
+      if (v.includes('판단불가') || v.includes('대상 아님') || v === '영역 밖' || v.includes('불러오기 실패'))
+        return `<span class="lens-dot" style="color:#475569" title="${v}">· 해당없음</span>`;
+      return `<span class="lens-dot" style="color:#64748B" title="${v}">✕ 미달</span>`;
+    }
+
     const MASTER_CONFIG = {
       cycle: {
         name: '사이클 레이더',
@@ -2178,6 +2281,39 @@
             render: d => (d.minervini && d.minervini.theme && d.minervini.theme !== '-') ? `<span class="badge" style="background:#1E293B; color:#CBD5E1;">${d.minervini.theme}</span>` : '—' }
         ]
       },
+      watch: {
+        name: '내 관심종목',
+        icon: '⭐',
+        bannerTitle: '⭐ 내 관심종목 — 9대 거장 통과 현황',
+        bannerDesc: '표 맨 앞의 <b>별(★)</b>을 누르면 이 목록에 담깁니다. 담은 종목이 9명의 거장 렌즈에서 각각 어떤 판정을 받았는지 한 줄로 비교할 수 있습니다. (● 통과 / ◐ 근접 / ✕ 미달 / · 해당없음 — 칸에 마우스를 올리면 정확한 판정이 나옵니다)',
+        statLabel: '관심종목',
+        verdicts: ['거장 5인+ 통과', '거장 3인+ 통과', '거장 1인+ 통과', '거장 미통과'],
+        criteria: [
+          { badge: '담는 법', color: '#EC4899', desc: '어느 탭에서든 표 맨 앞의 ★을 누르면 담기고, 다시 누르면 빠집니다. 종목 상세창에서도 담을 수 있습니다.' },
+          { badge: '저장 위치', color: '#3B82F6', desc: '이 브라우저에 저장됩니다. 다른 기기에서 보려면 위의 목록 복사 → 그 기기에서 목록 불러오기' },
+          { badge: '● 통과', color: '#10B981', desc: '그 거장의 기준을 충족 / ◐ 근접 = 한 단계 아래 / ✕ 미달 / · 해당없음(판단불가·대상 아님)' }
+        ],
+        getVerdict: d => {
+          const cnt = getPassedMasters(d).length;
+          if (cnt >= 5) return '거장 5인+ 통과';
+          if (cnt >= 3) return '거장 3인+ 통과';
+          if (cnt >= 1) return '거장 1인+ 통과';
+          return '거장 미통과';
+        },
+        customCols: [
+          { key: 'pass_count', label: '통과 거장', sort: d => getPassedMasters(d).length, render: d => {
+            const p = getPassedMasters(d);
+            const color = p.length >= 5 ? '#EC4899' : (p.length >= 3 ? '#A855F7' : (p.length >= 1 ? '#3B82F6' : '#64748B'));
+            return `<span class="badge" style="background:${color}22; color:${color}; border:1px solid ${color}66; font-weight:800;">${p.length}/9명</span>`;
+          }},
+          ...LENS.map(l => ({
+            key: 'lens_' + l.key,
+            label: l.name,
+            sort: d => (l.pass.includes(((d[l.key] || {}).verdict) || '') ? 2 : (l.mid.includes(((d[l.key] || {}).verdict) || '') ? 1 : 0)),
+            render: d => lensCell(d, l)
+          }))
+        ]
+      },
       multipass: {
         name: '다중 거장 통과',
         icon: '🌟',
@@ -2318,6 +2454,31 @@
         btn.addEventListener('click', e => setTjType(e.currentTarget.dataset.type, true));
       });
       document.getElementById('tj-type-filter').addEventListener('change', e => setTjType(e.target.value, true));
+
+      // 관심종목 도구
+      saveWatch();
+      document.getElementById('watch-copy').addEventListener('click', () => {
+        const txt = [...watchList].join(',');
+        navigator.clipboard.writeText(txt).then(
+          () => alert(`관심종목 ${watchList.size}개를 복사했습니다.\n다른 기기에서 '목록 불러오기'에 붙여넣으세요.`),
+          () => prompt('아래 내용을 복사하세요', txt));
+      });
+      document.getElementById('watch-load').addEventListener('click', () => {
+        const txt = prompt('복사해 둔 관심종목 목록을 붙여넣으세요 (종목코드를 쉼표로 구분)');
+        if (txt === null) return;
+        const codes = txt.split(/[\s,]+/).map(c => c.trim()).filter(Boolean);
+        const known = codes.filter(c => allData.some(x => x.code === c));
+        known.forEach(c => watchList.add(c));
+        saveWatch();
+        renderTable();
+        alert(`${known.length}개를 담았습니다.` + (codes.length - known.length ? ` (목록에 없는 종목 ${codes.length - known.length}개는 건너뜀)` : ''));
+      });
+      document.getElementById('watch-clear').addEventListener('click', () => {
+        if (!watchList.size || !confirm(`관심종목 ${watchList.size}개를 모두 비울까요?`)) return;
+        watchList.clear();
+        saveWatch();
+        renderTable();
+      });
 
       // 검색 & 필터
       document.getElementById('search-input').addEventListener('input', renderTable);
@@ -3000,6 +3161,10 @@
         `).join('');
       }
 
+      // 관심종목 도구 줄
+      const wt = document.getElementById('watch-tools');
+      if (wt) wt.style.display = (masterKey === 'watch') ? 'flex' : 'none';
+
       // 타짱 유형 메뉴는 타짱 탭에서만
       const isTj = (currentMaster === 'tajjang');
       document.getElementById('tj-type-group').style.display = isTj ? '' : 'none';
@@ -3023,6 +3188,7 @@
       
       const baseCols = [
         { key: 'rank', label: '#' },
+        { key: 'star', label: '★' },
         { key: 'name', label: '종목명' },
         { key: 'market', label: '시장' },
         { key: 'price', label: '현재가' },
@@ -3160,7 +3326,15 @@
       const minDy = parseFloat(document.getElementById('dy-slider').value);
 
       // 필터링
+      const isWatch = (currentMaster === 'watch');
       let filtered = allData.filter(d => {
+        // 관심종목 탭: 담은 종목만, 시총·PER 슬라이더와 나라 선택에 걸리지 않게 그대로 보여준다
+        if (isWatch) {
+          if (!watchList.has(d.code)) return false;
+          if (search && !d.name.toLowerCase().includes(search) && !d.code.toLowerCase().includes(search)) return false;
+          if (verdict !== 'ALL' && cfg.getVerdict(d) !== verdict) return false;
+          return true;
+        }
         // 국가/시장 필터 (한국 / 미국 / 일본 / 전체)
         if (currentCountry !== 'ALL' && d.country !== currentCountry) return false;
         // 타짱 유형 (타짱 탭에서만)
@@ -3266,7 +3440,12 @@
 
       const tbody = document.getElementById('table-body');
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding: 40px; color: var(--text-muted);">조건에 맞는 종목이 없습니다.</td></tr>`;
+        tbody.innerHTML = (currentMaster === 'watch' && watchList.size === 0)
+          ? `<tr><td colspan="24" style="text-align:center; padding: 44px; color: var(--text-muted); line-height:1.8;">
+               아직 담은 종목이 없습니다.<br>
+               <span style="color:#F9A8D4;">다른 탭(전종목 자유 탐색기 등)에서 표 맨 앞의 <strong>★</strong>을 누르면</span> 여기에 모입니다.
+             </td></tr>`
+          : `<tr><td colspan="24" style="text-align:center; padding: 40px; color: var(--text-muted);">조건에 맞는 종목이 없습니다.</td></tr>`;
         return;
       }
 
@@ -3280,6 +3459,7 @@
         return `
           <tr data-code="${d.code}">
             <td>${idx + 1}</td>
+            <td>${starCell(d.code)}</td>
             <td>
               <div class="cell-name">
                 <span>${d.name}</span>
@@ -3299,6 +3479,20 @@
           </tr>
         `;
       }).join('');
+
+      // 별 클릭 (행 클릭보다 먼저 가로챈다)
+      tbody.querySelectorAll('.star-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          toggleWatch(btn.dataset.star);
+          if (currentMaster === 'watch') renderTable();
+          else {
+            const on = watchList.has(btn.dataset.star);
+            btn.classList.toggle('on', on);
+            btn.textContent = on ? '★' : '☆';
+          }
+        });
+      });
 
       // 행 클릭 이벤트
       tbody.querySelectorAll('tr').forEach(tr => {
@@ -3325,9 +3519,10 @@
         kiyohara: ['넷넷 초저평가', '순현금 우량'],
         siegel: ['배당퀄리티 최상위', '배당퀄리티 우량'],
         tajjang: ['매수 재료'],
+        watch: null,
         minervini: ['🚀 2단계 상승']
       };
-      if (currentMaster === 'all') topCount = list.length;
+      if (currentMaster === 'all' || currentMaster === 'watch') topCount = list.length;
       else if (TOP_VERDICTS[currentMaster]) {
         const want = TOP_VERDICTS[currentMaster];
         topCount = list.filter(x => want.includes(cfg.getVerdict(x))).length;
@@ -3564,7 +3759,23 @@
 
     // ── 상세 모달 오픈 ─────────────────────────
     function openDetailModal(d) {
-      document.getElementById('m-name-code').textContent = `${d.name} (${d.code})`;
+      document.getElementById('m-name-code').childNodes[0].nodeValue = `${d.name} (${d.code}) `;
+      const mStar = document.getElementById('m-star-btn');
+      if (mStar) {
+        const paint = () => {
+          const on = watchList.has(d.code);
+          mStar.textContent = on ? '★' : '☆';
+          mStar.classList.toggle('on', on);
+          mStar.title = on ? '관심종목에서 빼기' : '관심종목에 담기';
+        };
+        paint();
+        mStar.onclick = e => {
+          e.stopPropagation();
+          toggleWatch(d.code);
+          paint();
+          renderTable();
+        };
+      }
       openPriceChart(d.code);
       
       const cagr = d.dps_cagr_3y;

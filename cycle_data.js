@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-09-28 07:37
-window.CYCLE_UPDATED = "2026-09-28 07:30";
+// 생성 시각: 2026-09-28 08:47
+window.CYCLE_UPDATED = "2026-09-28 08:44";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
@@ -261,23 +261,23 @@ window.CYCLE_DATA = {
   "icon": "📦",
   "indicator_name": "SCFI 상하이 컨테이너 운임지수",
   "unit": "pt",
-  "current_val": 3687.0,
-  "as_of": "2026-09-18",
+  "current_val": 3686.0,
+  "as_of": "2026-09-24",
   "source": "코리아쉬핑가제트 공개 데이터",
   "yoy": null,
   "percentile": null,
   "inverted": false,
   "thin_data": true,
-  "points": 5,
-  "span": "2026-08-21 ~ 2026-09-18",
+  "points": 6,
+  "span": "2026-08-21 ~ 2026-09-24",
   "status_badge": "자료 쌓이는 중",
   "status_color": "#94A3B8",
-  "current_comment": "최근값 3,687 pt (2026-09-18 기준). 아직 5개 값(2026-08-21~2026-09-18)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
+  "current_comment": "최근값 3,686 pt (2026-09-24 기준). 아직 6개 값(2026-08-21~2026-09-24)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
   "leader_principle": "업황 지표가 역사적 바닥 구간에서 돌아설 때가 길목이다. 지표가 최고치를 경신하고 실적 뉴스가 쏟아질 때는 이미 늦다.",
   "historical_bottom": {
    "min": 3409.0,
    "max": 3509.0,
-   "label": "관측 구간(2026-08-21~2026-09-18) 하위 20% 구간"
+   "label": "관측 구간(2026-08-21~2026-09-24) 하위 20% 구간"
   },
   "bottom_band_val": 3509.0,
   "break_even": null,
@@ -294,14 +294,16 @@ window.CYCLE_DATA = {
     "2026-08-28",
     "2026-09-04",
     "2026-09-11",
-    "2026-09-18"
+    "2026-09-18",
+    "2026-09-24"
    ],
    "values": [
     3409.0,
     3509.0,
     3590.0,
     3662.0,
-    3687.0
+    3687.0,
+    3686.0
    ],
    "bottom_band_val": 3509.0
   },
