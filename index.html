@@ -2394,7 +2394,24 @@
     function initUI() {
       updateSidebarStats();
       setupEventListeners();
+      applyWatchLink();          // 주소에 ?watch=코드,코드 가 붙어 오면 관심종목에 담는다
       updateMasterView(currentMaster);
+    }
+
+    // 링크로 관심종목 담기 — 다른 기기에서도 링크 한 번이면 그대로 담긴다
+    function applyWatchLink() {
+      const q = new URLSearchParams(location.search).get('watch');
+      if (!q) return;
+      const codes = q.split(/[\s,]+/).map(c => c.trim()).filter(Boolean);
+      let added = 0;
+      codes.forEach(c => {
+        if (allData.some(x => x.code === c) && !watchList.has(c)) { watchList.add(c); added++; }
+      });
+      saveWatch();
+      currentMaster = 'watch';
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.master === 'watch'));
+      history.replaceState(null, '', location.pathname);     // 주소는 깔끔하게 되돌린다
+      if (added) setTimeout(() => alert(`관심종목에 ${added}개를 담았습니다. (전체 ${watchList.size}개)`), 300);
     }
 
     // 사이드바 총 유니버스 통계 표시
