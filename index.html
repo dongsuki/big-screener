@@ -1903,15 +1903,40 @@
 
     // 거장별 설정 메타데이터
     // ── 관심종목 (이 브라우저에 저장) ───────────────────────
-    const WATCH_KEY = 'geojang_watchlist_v1';
-    let watchList = new Set();
-    try {
-      watchList = new Set(JSON.parse(localStorage.getItem(WATCH_KEY) || '[]'));
-    } catch (e) { watchList = new Set(); }
+    //  담은 종목은 {코드: {t: 담은 날, p: 담을 때 가격, m: 그때 통과한 거장}} 으로 저장한다.
+    //  밝은 화면(index_choice.html)과 같은 저장소를 써서 어느 쪽에서 담아도 그대로 보인다.
+    const WATCH_KEY = 'cs_watch';
+    let watchMeta = {};
+
+    function loadWatch() {
+      let o = {};
+      try {
+        const raw = JSON.parse(localStorage.getItem(WATCH_KEY) || '{}');
+        if (raw && typeof raw === 'object' && !Array.isArray(raw)) o = raw;
+      } catch (e) {}
+      try {                                   // 예전 목록(코드만 있던 것) 옮겨오기
+        const old = JSON.parse(localStorage.getItem('geojang_watchlist_v1') || '[]');
+        if (Array.isArray(old) && old.length) {
+          old.forEach(c => { if (!o[c]) o[c] = { t: window.SCREENER_DATE || '', p: null, m: [] }; });
+          localStorage.removeItem('geojang_watchlist_v1');
+        }
+      } catch (e) {}
+      return o;
+    }
+    watchMeta = loadWatch();
+
+    const watchHas = c => !!watchMeta[c];
+    const watchCodes = () => Object.keys(watchMeta);
+    function watchAdd(c) {
+      if (watchMeta[c]) return;
+      const d = (typeof allData !== 'undefined' ? allData : []).find(x => x.code === c);
+      watchMeta[c] = { t: window.SCREENER_DATE || '', p: d ? d.price : null, m: d ? getPassedMasters(d) : [] };
+    }
+    const watchDel = c => { delete watchMeta[c]; };
 
     function saveWatch() {
-      try { localStorage.setItem(WATCH_KEY, JSON.stringify([...watchList])); } catch (e) {}
-      const n = watchList.size;
+      try { localStorage.setItem(WATCH_KEY, JSON.stringify(watchMeta)); } catch (e) {}
+      const n = watchCodes().length;
       const desc = document.getElementById('watch-nav-desc');
       if (desc) desc.textContent = n ? `${n}개 담김 · 거장 통과 현황 한눈에` : '별(★)을 누른 종목만 모아보기';
       const lbl = document.getElementById('watch-count-label');
@@ -1919,12 +1944,12 @@
     }
 
     function toggleWatch(code) {
-      if (watchList.has(code)) watchList.delete(code); else watchList.add(code);
+      if (watchHas(code)) watchDel(code); else watchAdd(code);
       saveWatch();
     }
 
     function starCell(code) {
-      const on = watchList.has(code);
+      const on = watchHas(code);
       return `<button class="star-btn ${on ? 'on' : ''}" data-star="${code}" title="${on ? '관심종목에서 빼기' : '관심종목에 담기'}">${on ? '★' : '☆'}</button>`;
     }
 
@@ -2405,13 +2430,13 @@
       const codes = q.split(/[\s,]+/).map(c => c.trim()).filter(Boolean);
       let added = 0;
       codes.forEach(c => {
-        if (allData.some(x => x.code === c) && !watchList.has(c)) { watchList.add(c); added++; }
+        if (allData.some(x => x.code === c) && !watchHas(c)) { watchAdd(c); added++; }
       });
       saveWatch();
       currentMaster = 'watch';
       document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.master === 'watch'));
       history.replaceState(null, '', location.pathname);     // 주소는 깔끔하게 되돌린다
-      if (added) setTimeout(() => alert(`관심종목에 ${added}개를 담았습니다. (전체 ${watchList.size}개)`), 300);
+      if (added) setTimeout(() => alert(`관심종목에 ${added}개를 담았습니다. (전체 ${watchCodes().length}개)`), 300);
     }
 
     // 사이드바 총 유니버스 통계 표시
@@ -2475,9 +2500,9 @@
       // 관심종목 도구
       saveWatch();
       document.getElementById('watch-copy').addEventListener('click', () => {
-        const txt = [...watchList].join(',');
+        const txt = watchCodes().join(',');
         navigator.clipboard.writeText(txt).then(
-          () => alert(`관심종목 ${watchList.size}개를 복사했습니다.\n다른 기기에서 '목록 불러오기'에 붙여넣으세요.`),
+          () => alert(`관심종목 ${watchCodes().length}개를 복사했습니다.\n다른 기기에서 '목록 불러오기'에 붙여넣으세요.`),
           () => prompt('아래 내용을 복사하세요', txt));
       });
       document.getElementById('watch-load').addEventListener('click', () => {
@@ -2485,14 +2510,14 @@
         if (txt === null) return;
         const codes = txt.split(/[\s,]+/).map(c => c.trim()).filter(Boolean);
         const known = codes.filter(c => allData.some(x => x.code === c));
-        known.forEach(c => watchList.add(c));
+        known.forEach(c => watchAdd(c));
         saveWatch();
         renderTable();
         alert(`${known.length}개를 담았습니다.` + (codes.length - known.length ? ` (목록에 없는 종목 ${codes.length - known.length}개는 건너뜀)` : ''));
       });
       document.getElementById('watch-clear').addEventListener('click', () => {
-        if (!watchList.size || !confirm(`관심종목 ${watchList.size}개를 모두 비울까요?`)) return;
-        watchList.clear();
+        if (!watchCodes().length || !confirm(`관심종목 ${watchCodes().length}개를 모두 비울까요?`)) return;
+        watchMeta = {};
         saveWatch();
         renderTable();
       });
@@ -3205,7 +3230,7 @@
       
       const baseCols = [
         { key: 'rank', label: '#' },
-        { key: 'star', label: '★' },
+        ...(window.__hideStarCol ? [] : [{ key: 'star', label: '★' }]),
         { key: 'name', label: '종목명' },
         { key: 'market', label: '시장' },
         { key: 'price', label: '현재가' },
@@ -3331,6 +3356,7 @@
 
     // 테이블 본문 렌더링
     function renderTable() {
+      watchMeta = loadWatch();          // 다른 화면 장치가 담은 것도 곧바로 반영
       const cfg = MASTER_CONFIG[currentMaster];
       if (currentMaster === 'tajjang') updateTjCounts();   // 나라를 바꾸면 유형별 개수도 바뀐다
       const search = document.getElementById('search-input').value.trim().toLowerCase();
@@ -3347,7 +3373,7 @@
       let filtered = allData.filter(d => {
         // 관심종목 탭: 담은 종목만, 시총·PER 슬라이더와 나라 선택에 걸리지 않게 그대로 보여준다
         if (isWatch) {
-          if (!watchList.has(d.code)) return false;
+          if (!watchHas(d.code)) return false;
           if (search && !d.name.toLowerCase().includes(search) && !d.code.toLowerCase().includes(search)) return false;
           if (verdict !== 'ALL' && cfg.getVerdict(d) !== verdict) return false;
           return true;
@@ -3457,7 +3483,7 @@
 
       const tbody = document.getElementById('table-body');
       if (filtered.length === 0) {
-        tbody.innerHTML = (currentMaster === 'watch' && watchList.size === 0)
+        tbody.innerHTML = (currentMaster === 'watch' && watchCodes().length === 0)
           ? `<tr><td colspan="24" style="text-align:center; padding: 44px; color: var(--text-muted); line-height:1.8;">
                아직 담은 종목이 없습니다.<br>
                <span style="color:#F9A8D4;">다른 탭(전종목 자유 탐색기 등)에서 표 맨 앞의 <strong>★</strong>을 누르면</span> 여기에 모입니다.
@@ -3476,7 +3502,7 @@
         return `
           <tr data-code="${d.code}">
             <td>${idx + 1}</td>
-            <td>${starCell(d.code)}</td>
+            ${window.__hideStarCol ? '' : `<td>${starCell(d.code)}</td>`}
             <td>
               <div class="cell-name">
                 <span>${d.name}</span>
@@ -3504,7 +3530,7 @@
           toggleWatch(btn.dataset.star);
           if (currentMaster === 'watch') renderTable();
           else {
-            const on = watchList.has(btn.dataset.star);
+            const on = watchHas(btn.dataset.star);
             btn.classList.toggle('on', on);
             btn.textContent = on ? '★' : '☆';
           }
@@ -3780,7 +3806,7 @@
       const mStar = document.getElementById('m-star-btn');
       if (mStar) {
         const paint = () => {
-          const on = watchList.has(d.code);
+          const on = watchHas(d.code);
           mStar.textContent = on ? '★' : '☆';
           mStar.classList.toggle('on', on);
           mStar.title = on ? '관심종목에서 빼기' : '관심종목에 담기';
