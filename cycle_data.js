@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-10-08 07:37
-window.CYCLE_UPDATED = "2026-10-08 07:30";
+// 생성 시각: 2026-10-13 07:36
+window.CYCLE_UPDATED = "2026-10-13 07:30";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
@@ -152,25 +152,25 @@ window.CYCLE_DATA = {
   "icon": "🚢",
   "indicator_name": "BDI 건화물선 운임지수",
   "unit": "pt",
-  "current_val": 3070.0,
-  "as_of": "2026-10-05",
+  "current_val": 2994.0,
+  "as_of": "2026-10-07",
   "source": "코리아쉬핑가제트 공개 데이터",
   "yoy": null,
   "percentile": null,
   "inverted": false,
   "thin_data": true,
-  "points": 34,
-  "span": "2026-08-18 ~ 2026-10-05",
+  "points": 36,
+  "span": "2026-08-18 ~ 2026-10-07",
   "status_badge": "자료 쌓이는 중",
   "status_color": "#94A3B8",
-  "current_comment": "최근값 3,070 pt (2026-10-05 기준). 아직 34개 값(2026-08-18~2026-10-05)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
+  "current_comment": "최근값 2,994 pt (2026-10-07 기준). 아직 36개 값(2026-08-18~2026-10-07)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
   "leader_principle": "해운업의 바닥은 수요가 아니라 '폐선(공급 감소)'이 만든다. 벌크선, 탱커선, 컨테이너선의 업황 주기를 엄격히 분리해 보아야 한다.",
   "historical_bottom": {
    "min": 2791.0,
-   "max": 3056.0,
-   "label": "관측 구간(2026-08-18~2026-10-05) 하위 20% 구간"
+   "max": 3002.0,
+   "label": "관측 구간(2026-08-18~2026-10-07) 하위 20% 구간"
   },
-  "bottom_band_val": 3056.0,
+  "bottom_band_val": 3002.0,
   "break_even": null,
   "peak_val": 3620.0,
   "valuation_guide": {
@@ -214,7 +214,9 @@ window.CYCLE_DATA = {
     "2026-09-30",
     "2026-10-01",
     "2026-10-02",
-    "2026-10-05"
+    "2026-10-05",
+    "2026-10-06",
+    "2026-10-07"
    ],
    "values": [
     2815.0,
@@ -250,9 +252,11 @@ window.CYCLE_DATA = {
     3113.0,
     3140.0,
     3148.0,
-    3070.0
+    3070.0,
+    3002.0,
+    2994.0
    ],
-   "bottom_band_val": 3056.0
+   "bottom_band_val": 3002.0
   },
   "checklist": [
    {
@@ -281,23 +285,23 @@ window.CYCLE_DATA = {
   "icon": "📦",
   "indicator_name": "SCFI 상하이 컨테이너 운임지수",
   "unit": "pt",
-  "current_val": 3662.0,
-  "as_of": "2026-09-30",
+  "current_val": 3664.0,
+  "as_of": "2026-10-09",
   "source": "코리아쉬핑가제트 공개 데이터",
   "yoy": null,
   "percentile": null,
   "inverted": false,
   "thin_data": true,
-  "points": 7,
-  "span": "2026-08-21 ~ 2026-09-30",
+  "points": 8,
+  "span": "2026-08-21 ~ 2026-10-09",
   "status_badge": "자료 쌓이는 중",
   "status_color": "#94A3B8",
-  "current_comment": "최근값 3,662 pt (2026-09-30 기준). 아직 7개 값(2026-08-21~2026-09-30)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
+  "current_comment": "최근값 3,664 pt (2026-10-09 기준). 아직 8개 값(2026-08-21~2026-10-09)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
   "leader_principle": "업황 지표가 역사적 바닥 구간에서 돌아설 때가 길목이다. 지표가 최고치를 경신하고 실적 뉴스가 쏟아질 때는 이미 늦다.",
   "historical_bottom": {
    "min": 3409.0,
    "max": 3509.0,
-   "label": "관측 구간(2026-08-21~2026-09-30) 하위 20% 구간"
+   "label": "관측 구간(2026-08-21~2026-10-09) 하위 20% 구간"
   },
   "bottom_band_val": 3509.0,
   "break_even": null,
@@ -316,7 +320,8 @@ window.CYCLE_DATA = {
     "2026-09-11",
     "2026-09-18",
     "2026-09-24",
-    "2026-09-30"
+    "2026-09-30",
+    "2026-10-09"
    ],
    "values": [
     3409.0,
@@ -325,7 +330,8 @@ window.CYCLE_DATA = {
     3662.0,
     3687.0,
     3686.0,
-    3662.0
+    3662.0,
+    3664.0
    ],
    "bottom_band_val": 3509.0
   },
