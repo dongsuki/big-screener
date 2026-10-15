@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-10-15 07:37
-window.CYCLE_UPDATED = "2026-10-15 07:30";
+// 생성 시각: 2026-10-16 07:38
+window.CYCLE_UPDATED = "2026-10-16 07:30";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
@@ -152,27 +152,27 @@ window.CYCLE_DATA = {
   "icon": "🚢",
   "indicator_name": "BDI 건화물선 운임지수",
   "unit": "pt",
-  "current_val": 2801.0,
-  "as_of": "2026-10-13",
+  "current_val": 2667.0,
+  "as_of": "2026-10-14",
   "source": "코리아쉬핑가제트 공개 데이터",
   "yoy": null,
   "percentile": null,
   "inverted": false,
   "thin_data": true,
-  "points": 40,
-  "span": "2026-08-18 ~ 2026-10-13",
+  "points": 41,
+  "span": "2026-08-18 ~ 2026-10-14",
   "status_badge": "자료 쌓이는 중",
   "status_color": "#94A3B8",
-  "current_comment": "최근값 2,801 pt (2026-10-13 기준). 아직 40개 값(2026-08-18~2026-10-13)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
+  "current_comment": "최근값 2,667 pt (2026-10-14 기준). 아직 41개 값(2026-08-18~2026-10-14)만 모여 국면 판정은 보류합니다. 매일 갱신할수록 쌓입니다.",
   "leader_principle": "해운업의 바닥은 수요가 아니라 '폐선(공급 감소)'이 만든다. 벌크선, 탱커선, 컨테이너선의 업황 주기를 엄격히 분리해 보아야 한다.",
   "historical_bottom": {
-   "min": 2801.0,
-   "max": 2926.0,
-   "label": "관측 구간(2026-08-18~2026-10-13) 하위 20% 구간"
+   "min": 2791.0,
+   "max": 2917.0,
+   "label": "관측 구간(2026-08-18~2026-10-14) 하위 20% 구간"
   },
-  "bottom_band_val": 2926.0,
+  "bottom_band_val": 2917.0,
   "break_even": null,
-  "peak_val": 3620.0,
+  "peak_val": 3584.0,
   "valuation_guide": {
    "phase": "선종별 극심한 차별화 (벌크 5년 최고치 vs 탱커 슈퍼사이클 vs 컨테이너 조정)",
    "crowd_psychology": "BDI 3,600pt 급등 뉴스를 보고 컨테이너선사(HMM)를 잘못 사거나, 고점 부근에서 뒤늦게 추격 매수",
@@ -264,7 +264,7 @@ window.CYCLE_DATA = {
     2852.0,
     2801.0
    ],
-   "bottom_band_val": 2926.0
+   "bottom_band_val": 2917.0
   },
   "checklist": [
    {
