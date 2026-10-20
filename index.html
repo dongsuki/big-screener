@@ -11,8 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202610200754"></script>
-  <script src="cycle_data.js?v=202610200754"></script>
+  <script src="screener_data.js?v=202610210755"></script>
+  <script src="cycle_data.js?v=202610210755"></script>
+  <script src="flow_data.js?v=202610210755"></script>
 
   <style>
     :root {
@@ -1028,6 +1029,45 @@
       font-family: 'Pretendard', sans-serif;
     }
 
+    /* ── 오늘의 수급 탭 (쉬운 보기) ────────────────────────── */
+    .nav-item[data-master="flow"] { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); color: #34D399; margin-bottom: 4px; }
+    .nav-item[data-master="flow"]:hover { background: rgba(16,185,129,0.18); border-color: #34D399; color: #FFF; }
+    .nav-item[data-master="flow"].active { background: linear-gradient(135deg, #059669 0%, #10B981 100%); border-color: #6EE7B7; color: #FFF; font-weight: 800; }
+    .flow-container { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; }
+    .flow-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 22px 24px; }
+    .flow-headline { font-size: 24px; font-weight: 800; line-height: 1.45; margin-top: 6px; }
+    .flow-sub { font-size: 13.5px; color: var(--text-secondary); }
+    .flow-pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #F59E0B22; color: #FBBF24; border: 1px solid #F59E0B66; margin-left: 4px; }
+    .flow-up { color: #F87171; }
+    .flow-down { color: #60A5FA; }
+    .flow-pick { display: flex; flex-direction: column; gap: 10px; }
+    .flow-pick-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .flow-pick-label { width: 76px; font-size: 14px; font-weight: 800; color: var(--text-secondary); }
+    .flow-chip { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 999px; padding: 8px 16px; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+    .flow-chip:hover { border-color: #34D399; }
+    .flow-chip.active { background: #10B981; border-color: #6EE7B7; color: #052E1F; }
+    .flow-mkt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 18px; }
+    .flow-mkt { background: var(--bg-surface-elevated); border-radius: var(--radius-md); padding: 14px 18px; }
+    .flow-mkt-name { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+    .flow-mkt-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .flow-mkt-three span { display: block; font-size: 13px; color: var(--text-secondary); }
+    .flow-mkt-three b { font-size: 17px; }
+    .flow-tools { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 16px; font-size: 14px; color: var(--text-secondary); }
+    #flow-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
+    #flow-table th { background: #1B2230; color: #94A3B8; font-size: 13px; font-weight: 700; padding: 10px 12px; text-align: right; white-space: nowrap; }
+    #flow-table th.l, #flow-table td.l { text-align: left; }
+    #flow-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); text-align: right; white-space: nowrap; vertical-align: top; }
+    #flow-table td.flow-why { white-space: normal; color: var(--text-secondary); font-size: 14px; line-height: 1.5; min-width: 260px; }
+    #flow-table tr:hover td { background: var(--bg-surface-hover); cursor: pointer; }
+    .flow-rank { color: var(--text-muted); }
+    .flow-name { font-weight: 800; }
+    .flow-star { font-size: 12px; font-weight: 700; color: #FBBF24; margin-left: 4px; }
+    .flow-badge { display: inline-block; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+    .flow-flag { font-size: 12.5px; color: #FBBF24; margin-top: 4px; }
+    .flow-how summary { font-size: 15px; font-weight: 800; cursor: pointer; }
+    .flow-how p, .flow-how ol { font-size: 14px; line-height: 1.7; margin-top: 10px; color: var(--text-secondary); }
+    .flow-how ol { padding-left: 20px; }
+
     /* ── 사이클 레이더 전용 스타일 ────────────────────────── */
 
     /* 사이클 레이더 — 좌측 업종 목록 (거장 렌즈 목록과 같은 모양) */
@@ -1389,6 +1429,15 @@
           <div class="nav-text">
             <span class="nav-title">사이클 레이더</span>
             <span class="nav-desc">07leader 업종 바닥 탐지 & 3대 질문</span>
+          </div>
+        </button>
+
+        <!-- 오늘의 수급 (장마감 순위 + 수급 4대 체크) -->
+        <button class="nav-item" data-master="flow">
+          <span class="nav-icon">💰</span>
+          <div class="nav-text">
+            <span class="nav-title">오늘의 수급</span>
+            <span class="nav-desc">큰 돈은 어디로 갔나</span>
           </div>
         </button>
 
@@ -1794,6 +1843,9 @@
         </div>
       </div>
     </section>
+
+    <!-- 오늘의 수급 -->
+    <section class="flow-container" id="flow-view" style="display: none;"></section>
   </main>
   </div> <!-- /.app-layout -->
 
@@ -2417,6 +2469,11 @@
     });
 
     function initUI() {
+      // 오늘의 수급 자료(flow_data.js)가 없으면 메뉴 버튼을 숨긴다 (공개 사이트에는 자료를 올리지 않는 동안)
+      if (!window.FLOW_DATA) {
+        const fb = document.querySelector('.nav-item[data-master="flow"]');
+        if (fb) fb.style.display = 'none';
+      }
       updateSidebarStats();
       setupEventListeners();
       applyWatchLink();          // 주소에 ?watch=코드,코드 가 붙어 오면 관심종목에 담는다
@@ -2474,6 +2531,8 @@
           updateSidebarStats();
           if (currentMaster === 'cycle') {
             renderCycleRadar();
+          } else if (currentMaster === 'flow') {
+            renderFlowView();
           } else {
             renderTable();
           }
@@ -3166,6 +3225,18 @@
       if (cycleDiv) cycleDiv.style.display = isCycle ? 'block' : 'none';
       if (masterDiv) masterDiv.style.display = isCycle ? 'none' : 'block';
 
+      const flowEl = document.getElementById('flow-view');
+      if (flowEl) flowEl.style.display = 'none';
+      if (masterKey === 'flow') {
+        if (bannerEl) bannerEl.style.display = 'none';
+        if (controlEl) controlEl.style.display = 'none';
+        if (tableContainerEl) tableContainerEl.style.display = 'none';
+        if (comboPanelEl) comboPanelEl.style.display = 'none';
+        if (cycleRadarEl) cycleRadarEl.style.display = 'none';
+        if (flowEl) { flowEl.style.display = 'flex'; renderFlowView(); }
+        return;
+      }
+
       if (masterKey === 'cycle') {
         if (bannerEl) bannerEl.style.display = 'none';
         if (controlEl) controlEl.style.display = 'none';
@@ -3801,6 +3872,184 @@
     }
 
     // ── 상세 모달 오픈 ─────────────────────────
+    // ══ 오늘의 수급 (flow_data.js 의 window.FLOW_DATA) ══════════════════
+    // 화면 원칙 (2026-10-20 사용자 피드백): 박정수 페르소나 눈높이. 내부 계산 용어(백분위·유통시총 비율 등)는
+    // 화면에 쓰지 않고 쉬운 판정 이름 + 한 줄 설명으로 번역한다. 자세한 숫자는 종목 창과 '판정 기준'에만.
+    const FLOW_GRADES = {
+      '진짜 매집':     { n: '꾸준히 모으는 중',     c: '#10B981' },
+      '매집 유력':     { n: '모으기 시작',          c: '#3B82F6' },
+      '꾸준한 매수':   { n: '늘 사던 만큼 사는 중', c: '#8B5CF6' },
+      '오늘 반짝':     { n: '오늘만 반짝',          c: '#F59E0B' },
+      '빠져나가는 돈': { n: '빠져나가는 중',        c: '#EF4444' },
+      '개인 장세':     { n: '개인끼리 거래',        c: '#94A3B8' },
+      '보통':          { n: '뚜렷한 움직임 없음',   c: '#64748B' }
+    };
+    const FLOW_ORDER = ['진짜 매집', '매집 유력', '꾸준한 매수', '오늘 반짝', '보통', '개인 장세', '빠져나가는 돈'];
+    const FLOW_WHO = [
+      { k: 'together', t: '셋 다 산 종목', d: '외국인과 연기금·투신이 함께 산 종목' },
+      { k: 'foreign',  t: '외국인',        d: '외국인이 많이 산 종목' },
+      { k: 'pension',  t: '연기금·투신',   d: '연기금과 투신(펀드)이 많이 산 종목' }
+    ];
+    const FLOW_OTHER = [
+      { k: 'up',      t: '오늘 많이 오른 종목' },
+      { k: 'amount',  t: '오늘 거래가 몰린 종목' },
+      { k: 'masters', t: '⭐ 거장 통과 종목' },
+      { k: 'watch',   t: '☆ 내 관심종목' }
+    ];
+    const FLOW_PERIOD = [{ k: '1', t: '오늘' }, { k: '5', t: '1주' }, { k: '20', t: '1달' }];
+    let flowWho = 'together', flowPeriod = '1', flowOther = null, flowMasterOnly = false;
+    const flowEsc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const flowCls = v => (v > 0 ? 'flow-up' : (v < 0 ? 'flow-down' : ''));
+    // 억 원 → 읽기 쉬운 말 (1조 2,300억 / 850억)
+    const flowMoney = v => {
+      if (v == null) return '-';
+      const s = v > 0 ? '+' : (v < 0 ? '−' : ''), a = Math.abs(Math.round(v));
+      if (a >= 10000) { const jo = Math.floor(a / 10000), r = a % 10000; return `${s}${jo}조${r ? ' ' + r.toLocaleString() + '억' : ''}`; }
+      return `${s}${a.toLocaleString()}억`;
+    };
+    const flowBadge = g => { const x = FLOW_GRADES[g] || FLOW_GRADES['보통']; return `<span class="flow-badge" style="background:${x.c}1F; color:${x.c}; border:1px solid ${x.c}55;">${x.n}</span>`; };
+    // 판정 → 한 줄 설명 (사람 말로)
+    function flowWhy(s) {
+      const big = s.lead20 >= 5 ? '' : ' (다만 개인 거래가 훨씬 많음)';
+      switch (s.g) {
+        case '진짜 매집':     return `한 달(20일) 중 ${s.pos}일을 사 모았고, 이 종목치고 평소보다 훨씬 큰 돈`;
+        case '매집 유력':     return `평소보다 큰 돈이 들어오기 시작함 (20일 중 ${s.pos}일 매수)${big}`;
+        case '꾸준한 매수':   return `한 달 내내 꾸준히 사지만, 이 종목엔 늘 있던 정도 (20일 중 ${s.pos}일)`;
+        case '오늘 반짝':     return '오늘 하루만 큰 돈이 들어옴. 한 달로 보면 아직 아님';
+        case '빠져나가는 돈': return `한 달 동안 큰 돈이 계속 팔고 나가는 중 (20일 중 ${20 - s.pos}일 매도)`;
+        case '개인 장세':     return '외국인·기관 돈은 거의 없고, 개인끼리 사고판 날';
+        default:
+          if (s.frg20 > 0 && s.pi20 < 0) return `한 달 동안 외국인은 샀고(${flowMoney(s.frg20)}) 연기금·투신은 팔아서(${flowMoney(s.pi20)}) 서로 엇갈림`;
+          if (s.frg20 < 0 && s.pi20 > 0) return `한 달 동안 연기금·투신은 샀고(${flowMoney(s.pi20)}) 외국인은 팔아서(${flowMoney(s.frg20)}) 서로 엇갈림`;
+          return '큰 돈의 방향이 아직 뚜렷하지 않음';
+      }
+    }
+    function flowWarn(s) {
+      const w = [];
+      (s.flags || []).forEach(f => {
+        if (f.startsWith('기타법인')) w.push('회사 자신(자사주)이나 다른 회사가 사는 돈이 큼');
+        else if (f.startsWith('금융투자')) w.push('한 번에 넘긴 대량 거래로 보임');
+        else if (f.startsWith('얇은')) w.push('시장에 도는 주식이 적어 작은 돈에도 크게 움직임');
+      });
+      return w;
+    }
+    function flowAmt(s, who, P) {
+      const frg = P === '1' ? s.frg : s['frg' + P], pi = P === '1' ? s.pen + s.inv : s['pi' + P];
+      if (who === 'foreign') return frg;
+      if (who === 'pension') return pi;
+      return frg + pi;
+    }
+    function flowCodes() {
+      const F = window.FLOW_DATA;
+      if (flowOther === 'masters') {
+        return Object.keys(F.stocks).filter(c => { const d = allData.find(x => x.code === c); return d && getPassedMasters(d).length >= 2; })
+          .sort((a, b) => FLOW_ORDER.indexOf(F.stocks[a].g) - FLOW_ORDER.indexOf(F.stocks[b].g) || F.stocks[b].r20 - F.stocks[a].r20);
+      }
+      if (flowOther === 'watch') return watchCodes().filter(c => F.stocks[c]);
+      if (flowOther) return F.lists[flowOther] || [];
+      return F.lists[`${flowWho}_${flowPeriod}`] || F.lists[flowWho] || [];
+    }
+
+    function renderFlowView() {
+      const el = document.getElementById('flow-view');
+      const F = window.FLOW_DATA;
+      if (!F) { el.innerHTML = `<div class="flow-card">오늘의 수급 자료가 아직 없습니다.</div>`; return; }
+      const k = F.market['코스피'], q = F.market['코스닥'];
+      const ki = F.market['코스피'];
+      const big = ki.frg + ki.org;
+      const headline = `오늘 코스피 <span class="${flowCls(k.rt)}">${k.rt > 0 ? '+' : ''}${k.rt.toFixed(2)}%</span>. `
+        + (big < 0 && ki.ind > 0 ? `외국인·기관이 <b>${flowMoney(-big).replace('+', '')}</b> 팔고, 개인이 <b>${flowMoney(ki.ind).replace('+', '')}</b> 샀어요.`
+          : big > 0 && ki.ind < 0 ? `개인이 <b>${flowMoney(-ki.ind).replace('+', '')}</b> 팔고, 외국인·기관이 <b>${flowMoney(big).replace('+', '')}</b> 샀어요.`
+          : `외국인 ${flowMoney(ki.frg)}, 기관 ${flowMoney(ki.org)}, 개인 ${flowMoney(ki.ind)}.`);
+      const P = flowPeriod;
+      const pm = P === '1' ? F.market : (F.periods && F.periods[P]) || {};
+      const pLabel = FLOW_PERIOD.find(x => x.k === P).t;
+      const mkBox = (nm, m, idx) => !m ? '' : `
+        <div class="flow-mkt">
+          <div class="flow-mkt-name">${nm}${idx ? ` <span class="${flowCls(idx.rt)}">${idx.rt > 0 ? '+' : ''}${idx.rt.toFixed(2)}%</span>` : ''}</div>
+          <div class="flow-mkt-three">
+            <div><span>개인</span><b class="${flowCls(m.ind)}">${flowMoney(m.ind)}</b></div>
+            <div><span>외국인</span><b class="${flowCls(m.frg)}">${flowMoney(m.frg)}</b></div>
+            <div><span>기관</span><b class="${flowCls(m.org)}">${flowMoney(m.org)}</b></div>
+          </div>
+        </div>`;
+      let codes = flowCodes().filter(c => F.stocks[c]);
+      if (flowMasterOnly) codes = codes.filter(c => { const d = allData.find(x => x.code === c); return d && getPassedMasters(d).length >= 1; });
+      const amtLabel = flowOther ? '외국인+연기금·투신 (오늘)' : `${FLOW_WHO.find(x => x.k === flowWho).t.replace(' 산 종목', '')} 순매수 (${pLabel})`;
+      const rows = codes.map((c, i) => {
+        const s = F.stocks[c];
+        const d = allData.find(x => x.code === c);
+        const np = d ? getPassedMasters(d).length : 0;
+        const amt = flowOther ? s.frg + s.pen + s.inv : flowAmt(s, flowWho, P);
+        const warn = flowWarn(s);
+        return `<tr data-code="${c}">
+          <td class="flow-rank">${i + 1}</td>
+          <td class="l"><div class="flow-name">${flowEsc(s.nm)}${np ? ` <span class="flow-star" title="거장 ${np}명 통과">⭐${np}</span>` : ''}</div></td>
+          <td class="${flowCls(s.rt)}">${s.rt == null ? '-' : (s.rt > 0 ? '+' : '') + s.rt.toFixed(1) + '%'}</td>
+          <td class="${flowCls(amt)}"><b>${flowMoney(amt)}</b></td>
+          <td class="l">${flowBadge(s.g)}</td>
+          <td class="l flow-why">${flowWhy(s)}${warn.length ? `<div class="flow-flag">⚠ ${warn.join(' · ')}</div>` : ''}</td>
+        </tr>`;
+      }).join('');
+      const chip = (on, attr, val, txt) => `<button class="flow-chip ${on ? 'active' : ''}" ${attr}="${val}">${txt}</button>`;
+      el.innerHTML = `
+        <div class="flow-card">
+          <div class="flow-sub">💰 오늘의 수급 · ${F.date} 장 마감 ${F.final ? '' : '<span class="flow-pill">잠정</span>'}</div>
+          <div class="flow-headline">${headline}</div>
+          <div class="flow-sub" style="margin-top:6px;">외국인·연기금·투신 같은 <b>큰 돈</b>이 어디로 갔는지, 종목마다 한 줄로 정리했어요.</div>
+        </div>
+
+        <div class="flow-card">
+          <div class="flow-pick">
+            <div class="flow-pick-row"><span class="flow-pick-label">누구 돈?</span>
+              ${FLOW_WHO.map(w => chip(!flowOther && flowWho === w.k, 'data-who', w.k, w.t)).join('')}
+            </div>
+            <div class="flow-pick-row"><span class="flow-pick-label">기간</span>
+              ${FLOW_PERIOD.map(p => chip(!flowOther && flowPeriod === p.k, 'data-period', p.k, p.t)).join('')}
+              ${F.period_from && P !== '1' ? `<span class="flow-sub">${F.period_from[P]} ~ 오늘</span>` : ''}
+            </div>
+            <div class="flow-pick-row"><span class="flow-pick-label">다른 목록</span>
+              ${FLOW_OTHER.map(o => chip(flowOther === o.k, 'data-other', o.k, o.t)).join('')}
+            </div>
+          </div>
+          ${flowOther ? '' : `<div class="flow-mkt-grid">${mkBox(`코스피 ${pLabel}`, pm['코스피'], P === '1' ? k : null)}${mkBox(`코스닥 ${pLabel}`, pm['코스닥'], P === '1' ? q : null)}</div>`}
+          <div class="flow-tools">
+            <label><input type="checkbox" id="flow-master-only" ${flowMasterOnly ? 'checked' : ''}> 거장 통과 종목만 보기</label>
+            <span>${codes.length}개 · 종목을 누르면 자세히 볼 수 있어요</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="flow-table">
+              <thead><tr><th>#</th><th class="l">종목</th><th>오늘</th><th>${amtLabel}</th><th class="l" title="외국인·연기금·투신을 합친 한 달(20일) 기준">큰 돈 판정 (셋 합친 한 달)</th><th class="l">한 줄 설명</th></tr></thead>
+              <tbody>${rows || '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">해당하는 종목이 없어요.</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <details class="flow-card flow-how">
+          <summary>판정은 어떻게 하나요?</summary>
+          <p>외국인·연기금·투신이 <b>최근 한 달(20거래일)</b> 동안 산 돈을 네 가지로 봅니다.</p>
+          <ol>
+            <li><b>큰 돈인가?</b> 시장에 도는 주식의 1% 이상을 샀나 (아주 큰 회사는 0.5%)</li>
+            <li><b>평소보다 많은가?</b> 이 종목의 최근 몇 달 기록 중 상위 10% 안에 드나</li>
+            <li><b>꾸준한가?</b> 20일 중 12일 이상 샀나</li>
+            <li><b>판을 움직였나?</b> 그 기간 거래대금의 5% 이상을 차지했나</li>
+          </ol>
+          <p>넷 다 맞으면 <b>꾸준히 모으는 중</b>, 셋이면 <b>모으기 시작</b>(평소보다 많을 때) 또는 <b>늘 사던 만큼</b>.
+             한 달은 아닌데 오늘만 크면 <b>오늘만 반짝</b>, 한 달 내내 크게 팔면 <b>빠져나가는 중</b>입니다.</p>
+          <p class="flow-sub">회사 자신의 자사주 매입, 대량 거래, ETF 같은 기계적인 돈은 빼고 셉니다. 기준은 작업실에서 정한 출발점이고 업계 표준은 아니에요. 매수·매도 추천이 아닙니다.
+             자료: 키움증권, KRX+넥스트레이드 통합(HTS [0784]와 같은 기준), ${F.made} 계산.</p>
+        </details>`;
+      el.querySelectorAll('[data-who]').forEach(b => b.addEventListener('click', e => { flowWho = e.currentTarget.dataset.who; flowOther = null; renderFlowView(); }));
+      el.querySelectorAll('[data-period]').forEach(b => b.addEventListener('click', e => { flowPeriod = e.currentTarget.dataset.period; flowOther = null; renderFlowView(); }));
+      el.querySelectorAll('[data-other]').forEach(b => b.addEventListener('click', e => { flowOther = e.currentTarget.dataset.other; renderFlowView(); }));
+      el.querySelector('#flow-master-only').addEventListener('change', e => { flowMasterOnly = e.target.checked; renderFlowView(); });
+      el.querySelectorAll('#flow-table tbody tr[data-code]').forEach(tr => tr.addEventListener('click', () => {
+        const d = allData.find(x => x.code === tr.dataset.code);
+        if (d) openDetailModal(d);
+        else alert('이 종목은 스크리너 채점 대상(재무 자료)이 아니라 자세히 보기가 없어요.');
+      }));
+    }
+
     function openDetailModal(d) {
       document.getElementById('m-name-code').childNodes[0].nodeValue = `${d.name} (${d.code}) `;
       const mStar = document.getElementById('m-star-btn');
