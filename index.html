@@ -11,9 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202610210755"></script>
-  <script src="cycle_data.js?v=202610210755"></script>
-  <script src="flow_data.js?v=202610210755"></script>
+  <script src="screener_data.js?v=202610220756"></script>
+  <script src="cycle_data.js?v=202610220756"></script>
+  <script src="airtable_data.js?v=202610212329"></script>
+  <script src="flow_data.js?v=202610220756"></script>
 
   <style>
     :root {
@@ -1064,11 +1065,66 @@
     .flow-star { font-size: 12px; font-weight: 700; color: #FBBF24; margin-left: 4px; }
     .flow-badge { display: inline-block; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
     .flow-flag { font-size: 12.5px; color: #FBBF24; margin-top: 4px; }
+    #flow-table th small { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 2px; }
+    #flow-table td.flow-num { color: var(--text-secondary); }
+    #flow-table td.flow-num.on { color: #10B981; font-weight: 800; }
     .flow-how summary { font-size: 15px; font-weight: 800; cursor: pointer; }
     .flow-how p, .flow-how ol { font-size: 14px; line-height: 1.7; margin-top: 10px; color: var(--text-secondary); }
     .flow-how ol { padding-left: 20px; }
 
+    /* ── 재료 지도 · 재료 소식 (에어테이블) ── */
+    .nav-item[data-master="themes"], .nav-item[data-master="news"] { border-color: rgba(168,85,247,0.35); background: rgba(168,85,247,0.07); color: #C084FC; margin-bottom: 4px; }
+    .nav-item[data-master="themes"].active, .nav-item[data-master="news"].active { background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%); border-color: #D8B4FE; color: #FFF; font-weight: 800; }
+    .at-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin: 2px 4px 2px 0; }
+    .at-chip:hover { border-color: #A855F7; }
+    .at-chip.na { cursor: default; color: var(--text-secondary); }
+    .at-star { color: #F59E0B; font-size: 11px; }
+    .at-np { color: #FBBF24; font-size: 11px; }
+    .at-tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(168,85,247,0.14); color: #A855F7; margin: 1px 4px 1px 0; white-space: nowrap; }
+    .at-muted { color: var(--text-muted); font-size: 12.5px; }
+    .at-why { white-space: normal !important; font-size: 13px; color: var(--text-secondary); line-height: 1.5; min-width: 220px; max-width: 420px; }
+    .at-search { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 999px; padding: 7px 14px; font-size: 14px; min-width: 240px; }
+    .at-tlist { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .at-tcard { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface-elevated); }
+    .at-tcard.open { border-color: #A855F7; }
+    .at-thead { display: flex; align-items: center; gap: 14px; padding: 12px 14px; cursor: pointer; flex-wrap: wrap; }
+    .at-rank { color: var(--text-muted); font-weight: 800; width: 22px; }
+    .at-tname { min-width: 150px; font-size: 15.5px; }
+    .at-cls { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+    .at-tnum { display: flex; flex-direction: column; min-width: 110px; }
+    .at-tnum span { font-size: 11.5px; color: var(--text-muted); }
+    .at-tnum b { font-size: 15px; }
+    .at-lead { flex: 1; min-width: 240px; }
+    .at-open { font-size: 12.5px; color: #A855F7; font-weight: 700; white-space: nowrap; }
+    .at-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .at-table th { background: #1B2230; color: #94A3B8; font-size: 12px; padding: 8px 12px; text-align: left; }
+    .at-table td { padding: 8px 12px; border-top: 1px solid var(--border-subtle); vertical-align: top; }
+    .at-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .at-item { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface-elevated); padding: 12px 14px; }
+    .at-meta { font-size: 12.5px; color: var(--text-muted); }
+    .at-title { font-size: 15px; font-weight: 700; margin-top: 4px; line-height: 1.5; }
+    .at-title a, .at-meta a, .at-mrow a, .at-det a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--text-muted); }
+    .at-chips { margin-top: 6px; }
+    .at-det { margin-top: 6px; font-size: 13.5px; color: var(--text-secondary); }
+    .at-det summary { cursor: pointer; font-weight: 700; color: #A855F7; }
+    .at-det div { margin-top: 4px; line-height: 1.6; white-space: pre-line; }
+    #m-at-box { margin-top: 4px; }
+    .at-mh { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
+    .at-msec { margin-bottom: 12px; }
+    .at-msub { font-size: 13px; font-weight: 800; color: var(--text-secondary); margin-bottom: 4px; }
+    .at-mrow { font-size: 13.5px; line-height: 1.6; margin-bottom: 3px; }
+
     /* ── 사이클 레이더 전용 스타일 ────────────────────────── */
+    .cw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; margin-top: 12px; }
+    .cw-item { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .cw-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14.5px; }
+    .cw-tag { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(100,116,139,0.15); color: var(--text-secondary); white-space: nowrap; }
+    .cw-tag.auto { background: rgba(16,185,129,0.15); color: #10B981; }
+    .cw-val { font-size: 14px; font-weight: 700; line-height: 1.5; }
+    .cw-asof { font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+    .cw-sig { font-size: 13px; font-weight: 700; color: #F59E0B; }
+    .cw-meta { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }
+    .cw-link { font-size: 12.5px; font-weight: 700; color: #38BDF8; text-decoration: none; margin-top: 2px; }
 
     /* 사이클 레이더 — 좌측 업종 목록 (거장 렌즈 목록과 같은 모양) */
     .cycle-nav-btn {
@@ -1441,6 +1497,22 @@
           </div>
         </button>
 
+        <!-- 재료 지도 · 오늘의 재료 소식 (내 에어테이블, 내 컴퓨터 전용) -->
+        <button class="nav-item" data-master="themes">
+          <span class="nav-icon">🧩</span>
+          <div class="nav-text">
+            <span class="nav-title">재료 지도</span>
+            <span class="nav-desc">지금 뜨거운 재료와 대장주</span>
+          </div>
+        </button>
+        <button class="nav-item" data-master="news">
+          <span class="nav-icon">📰</span>
+          <div class="nav-text">
+            <span class="nav-title">오늘의 재료 소식</span>
+            <span class="nav-desc">뉴스·급등 이유·리포트·일정</span>
+          </div>
+        </button>
+
         <!-- 사이클 레이더를 열면 여기에 업종 목록이 세로로 뜬다 -->
         <div class="nav-divider" id="cycle-nav-divider" style="display:none;">업종 사이클</div>
         <div id="cycle-nav-list" style="display:none; flex-direction:column; gap:4px;"></div>
@@ -1802,6 +1874,9 @@
         </div>
       </div>
 
+      <!-- 업종 점검표 (CYCLE_DATA[업종].watch 가 있는 업종만, 예: 천연가스) -->
+      <div class="cycle-card" id="cycle-watch-box" style="display:none; margin-top: 6px;"></div>
+
       <!-- 하단: 업종 대표주 10년 펀더멘털 즉시 검증 테이블 -->
       <div class="cycle-card" style="margin-top: 6px;">
         <div class="cycle-card-header">
@@ -1846,6 +1921,8 @@
 
     <!-- 오늘의 수급 -->
     <section class="flow-container" id="flow-view" style="display: none;"></section>
+    <section class="flow-container" id="themes-view" style="display: none;"></section>
+    <section class="flow-container" id="news-view" style="display: none;"></section>
   </main>
   </div> <!-- /.app-layout -->
 
@@ -1926,6 +2003,9 @@
             </table>
           </div>
         </div>
+
+        <!-- 재료·뉴스 (내 에어테이블). 꼭 맨 뒤에 둔다: 미리보기 화면(cs_modal)이 앞의 네 칸을 순서대로 읽는다 -->
+        <div id="m-at-box" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -2474,6 +2554,9 @@
         const fb = document.querySelector('.nav-item[data-master="flow"]');
         if (fb) fb.style.display = 'none';
       }
+      if (!window.AT_DATA) {   // 에어테이블 자료(airtable_data.js)는 내 컴퓨터에만 있다
+        document.querySelectorAll('.nav-item[data-master="themes"], .nav-item[data-master="news"]').forEach(b => b.style.display = 'none');
+      }
       updateSidebarStats();
       setupEventListeners();
       applyWatchLink();          // 주소에 ?watch=코드,코드 가 붙어 오면 관심종목에 담는다
@@ -2533,6 +2616,10 @@
             renderCycleRadar();
           } else if (currentMaster === 'flow') {
             renderFlowView();
+          } else if (currentMaster === 'themes') {
+            renderThemesView();
+          } else if (currentMaster === 'news') {
+            renderNewsView();
           } else {
             renderTable();
           }
@@ -2735,6 +2822,31 @@
     }
 
     // ── 사이클 레이더 렌더러 (07leader 렌즈 고도화) ─────────────────
+    // 업종 점검표: 매일·매주 챙겨 볼 지표들 (자동 갱신 ✅ / 바로가기 🔗)
+    function renderCycleWatch(d) {
+      const box = document.getElementById('cycle-watch-box');
+      if (!box) return;
+      const w = d && d.watch;
+      if (!w || !w.rows || !w.rows.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+      const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      box.style.display = '';
+      box.innerHTML = `
+        <div class="cycle-card-header"><div>
+          <div class="cycle-card-title"><span>🧭</span><span>${esc(w.title)}</span></div>
+          <div class="cycle-card-sub">${esc(w.note || '')}</div>
+        </div></div>
+        <div class="cw-grid">${w.rows.map(r => `
+          <div class="cw-item">
+            <div class="cw-top"><b>${esc(r.name)}</b><span class="cw-tag ${r.auto ? 'auto' : ''}">${r.auto ? '✅ 자동' : '🔗 직접 확인'}</span></div>
+            <div class="cw-val">${esc(r.value)}${r.as_of ? ` <span class="cw-asof">${esc(r.as_of)} 기준</span>` : ''}</div>
+            ${r.signal ? `<div class="cw-sig">→ ${esc(r.signal)}</div>` : ''}
+            <div class="cw-meta">📅 ${esc(r.when)}</div>
+            <div class="cw-meta">👀 ${esc(r.how)}</div>
+            ${r.link ? `<a class="cw-link" href="${esc(r.link)}" target="_blank" rel="noopener">바로가기 ↗</a>` : ''}
+          </div>`).join('')}
+        </div>`;
+    }
+
     function renderCycleRadar() {
       if (!window.CYCLE_DATA) return;
       const dataMap = window.CYCLE_DATA;
@@ -2809,6 +2921,8 @@
       } else {
         if (subBar) subBar.style.display = 'none';
       }
+
+      renderCycleWatch(currentData);
 
       // 3. 선행지표 헤더 & 배지 갱신
       const titleEl = document.getElementById('cycle-chart-title');
@@ -3226,14 +3340,18 @@
       if (masterDiv) masterDiv.style.display = isCycle ? 'none' : 'block';
 
       const flowEl = document.getElementById('flow-view');
-      if (flowEl) flowEl.style.display = 'none';
-      if (masterKey === 'flow') {
+      const themesEl = document.getElementById('themes-view');
+      const newsEl = document.getElementById('news-view');
+      [flowEl, themesEl, newsEl].forEach(x => { if (x) x.style.display = 'none'; });
+      if (masterKey === 'flow' || masterKey === 'themes' || masterKey === 'news') {
         if (bannerEl) bannerEl.style.display = 'none';
         if (controlEl) controlEl.style.display = 'none';
         if (tableContainerEl) tableContainerEl.style.display = 'none';
         if (comboPanelEl) comboPanelEl.style.display = 'none';
         if (cycleRadarEl) cycleRadarEl.style.display = 'none';
-        if (flowEl) { flowEl.style.display = 'flex'; renderFlowView(); }
+        if (masterKey === 'flow' && flowEl) { flowEl.style.display = 'flex'; renderFlowView(); }
+        if (masterKey === 'themes' && themesEl) { themesEl.style.display = 'flex'; renderThemesView(); }
+        if (masterKey === 'news' && newsEl) { newsEl.style.display = 'flex'; renderNewsView(); }
         return;
       }
 
@@ -3908,6 +4026,17 @@
       return `${s}${a.toLocaleString()}억`;
     };
     const flowBadge = g => { const x = FLOW_GRADES[g] || FLOW_GRADES['보통']; return `<span class="flow-badge" style="background:${x.c}1F; color:${x.c}; border:1px solid ${x.c}55;">${x.n}</span>`; };
+    // 4가지 체크 (통과 ✓ 초록, 아니면 회색)
+    // 수급 데이터 4개 항목을 각각 칸으로 (통과하면 초록 ✓)
+    function flowCells(s) {
+      const c = s.chk || [];
+      const cell = (ok, txt) => `<td class="flow-num ${ok ? 'on' : ''}">${ok ? '✓ ' : ''}${txt}</td>`;
+      const top = Math.max(1, 100 - s.p20);
+      return cell(c[0], `${s.r20 > 0 ? '+' : ''}${s.r20}%`)
+        + cell(c[1], s.p20 >= 50 ? `상위 ${top}%` : `하위 ${Math.max(1, s.p20)}%`)
+        + cell(c[2], `${s.pos}일`)
+        + cell(c[3], `${s.lead20}%`);
+    }
     // 판정 → 한 줄 설명 (사람 말로)
     function flowWhy(s) {
       const big = s.lead20 >= 5 ? '' : ' (다만 개인 거래가 훨씬 많음)';
@@ -3984,11 +4113,13 @@
         const warn = flowWarn(s);
         return `<tr data-code="${c}">
           <td class="flow-rank">${i + 1}</td>
-          <td class="l"><div class="flow-name">${flowEsc(s.nm)}${np ? ` <span class="flow-star" title="거장 ${np}명 통과">⭐${np}</span>` : ''}</div></td>
+          <td class="l"><div class="flow-name">${flowEsc(s.nm)}${np ? ` <span class="flow-star" title="거장 ${np}명 통과">⭐${np}</span>` : ''}</div>${warn.length ? `<div class="flow-flag">⚠ ${warn.join(' · ')}</div>` : ''}</td>
+          <td class="l">${atThemeTags(c) || '<span class="at-muted">-</span>'}</td>
           <td class="${flowCls(s.rt)}">${s.rt == null ? '-' : (s.rt > 0 ? '+' : '') + s.rt.toFixed(1) + '%'}</td>
+          ${flowOther === 'up' ? `<td class="l at-why">${atReason(c, F.date) || '<span class="at-muted">이슈정리 기록 없음</span>'}</td>` : ''}
           <td class="${flowCls(amt)}"><b>${flowMoney(amt)}</b></td>
-          <td class="l">${flowBadge(s.g)}</td>
-          <td class="l flow-why">${flowWhy(s)}${warn.length ? `<div class="flow-flag">⚠ ${warn.join(' · ')}</div>` : ''}</td>
+          <td class="l" title="${flowEsc(flowWhy(s))}">${flowBadge(s.g)}</td>
+          ${flowCells(s)}
         </tr>`;
       }).join('');
       const chip = (on, attr, val, txt) => `<button class="flow-chip ${on ? 'active' : ''}" ${attr}="${val}">${txt}</button>`;
@@ -4019,20 +4150,20 @@
           </div>
           <div style="overflow-x:auto;">
             <table id="flow-table">
-              <thead><tr><th>#</th><th class="l">종목</th><th>오늘</th><th>${amtLabel}</th><th class="l" title="외국인·연기금·투신을 합친 한 달(20일) 기준">큰 돈 판정 (셋 합친 한 달)</th><th class="l">한 줄 설명</th></tr></thead>
-              <tbody>${rows || '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">해당하는 종목이 없어요.</td></tr>'}</tbody>
+              <thead><tr><th>#</th><th class="l">종목</th><th class="l" title="내 에어테이블의 재료(테마), ★ 은 대장 표시">재료</th><th>오늘</th>${flowOther === 'up' ? '<th class="l" title="내 에어테이블 이슈정리의 상승 사유">오른 이유</th>' : ''}<th>${amtLabel}</th><th class="l" title="외국인·연기금·투신을 합친 최근 한 달(20거래일) 기준">수급 데이터</th><th title="한 달 동안 큰 돈(외국인·연기금·투신)이 산 금액 ÷ 시장에 도는 주식의 시가총액. 1% 이상(시총 10조↑는 0.5%)이면 ✓">매수 규모<small>유통주식 대비</small></th><th title="이번 한 달 매수액이 이 종목의 최근 4개월 기록 중 어디쯤인가. 상위 10% 안이면 ✓">평소 대비<small>최근 4개월 중</small></th><th title="최근 20거래일 중 큰 돈이 순매수한 날 수. 12일 이상이면 ✓">매수 일수<small>20일 중</small></th><th title="한 달 거래대금 중 큰 돈의 순매수가 차지한 몫. 5% 이상이면 ✓">거래 비중<small>거래대금 중</small></th></tr></thead>
+              <tbody>${rows || '<tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:24px;">해당하는 종목이 없어요.</td></tr>'}</tbody>
             </table>
           </div>
         </div>
 
         <details class="flow-card flow-how">
           <summary>판정은 어떻게 하나요?</summary>
-          <p>외국인·연기금·투신이 <b>최근 한 달(20거래일)</b> 동안 산 돈을 네 가지로 봅니다.</p>
+          <p><b>수급 데이터</b>는 외국인·연기금·투신이 <b>최근 한 달(20거래일)</b> 동안 산 돈을 네 가지로 봅니다. 표에서 초록색 ✓ 이 기준을 통과한 항목이고, 판정 이름에 마우스를 올리면 한 줄 설명이 나와요.</p>
           <ol>
-            <li><b>큰 돈인가?</b> 시장에 도는 주식의 1% 이상을 샀나 (아주 큰 회사는 0.5%)</li>
-            <li><b>평소보다 많은가?</b> 이 종목의 최근 몇 달 기록 중 상위 10% 안에 드나</li>
-            <li><b>꾸준한가?</b> 20일 중 12일 이상 샀나</li>
-            <li><b>판을 움직였나?</b> 그 기간 거래대금의 5% 이상을 차지했나</li>
+            <li><b>매수 규모</b>: 한 달 동안 산 금액이 시장에 도는 주식(유통주식) 시가총액의 몇 %인가. 1% 이상이면 ✓ (시총 10조 이상 대형주는 0.5%)</li>
+            <li><b>평소 대비</b>: 이번 한 달 매수액이 이 종목의 최근 4개월 기록 중 어디쯤인가. 상위 10% 안이면 ✓</li>
+            <li><b>매수 일수</b>: 최근 20거래일 중 순매수한 날이 며칠인가. 12일 이상이면 ✓</li>
+            <li><b>거래 비중</b>: 한 달 거래대금 중 큰 돈의 순매수가 몇 %를 차지했나. 5% 이상이면 ✓ (낮으면 개인 거래에 묻힌 돈)</li>
           </ol>
           <p>넷 다 맞으면 <b>꾸준히 모으는 중</b>, 셋이면 <b>모으기 시작</b>(평소보다 많을 때) 또는 <b>늘 사던 만큼</b>.
              한 달은 아닌데 오늘만 크면 <b>오늘만 반짝</b>, 한 달 내내 크게 팔면 <b>빠져나가는 중</b>입니다.</p>
@@ -4048,6 +4179,221 @@
         if (d) openDetailModal(d);
         else alert('이 종목은 스크리너 채점 대상(재무 자료)이 아니라 자세히 보기가 없어요.');
       }));
+    }
+
+    // ══ 에어테이블 재료·뉴스 (airtable_data.js 의 window.AT_DATA, 내 컴퓨터 전용) ══════════
+    let atIdx = null;
+    function atIndex() {
+      if (atIdx || !window.AT_DATA) return atIdx;
+      const A = window.AT_DATA, by = () => ({});
+      atIdx = { themes: by(), issues: by(), reports: by(), pre: by(), events: by() };
+      const push = (m, c, v) => { if (!c) return; (m[c] = m[c] || []).push(v); };
+      Object.entries(A.themes).forEach(([t, th]) => th.stocks.forEach(s => push(atIdx.themes, s.code, { t, star: s.star, why: s.why, cls: th.cls })));
+      A.issues.forEach(x => push(atIdx.issues, x.code, x));
+      A.reports.forEach(x => push(atIdx.reports, x.code, x));
+      A.pre.forEach(x => x.stocks.forEach(s => push(atIdx.pre, s.code, x)));
+      A.events.forEach(x => x.stocks.forEach(s => push(atIdx.events, s.code, x)));
+      Object.values(atIdx.themes).forEach(l => l.sort((a, b) => b.star - a.star));
+      return atIdx;
+    }
+    const atEsc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const atStars = n => n ? '★'.repeat(Math.min(3, n)) : '';
+    const atMd = d => d ? d.slice(5).replace('-', '/') : '';
+    // 종목 칩: 이름 + 대장 별 + 거장 통과 수, 누르면 종목 창
+    function atChip(nm, code, star) {
+      const d = code ? allData.find(x => x.code === code) : null;
+      const np = d ? getPassedMasters(d).length : 0;
+      return `<button class="at-chip ${d ? '' : 'na'}" ${d ? `data-code="${code}"` : ''} title="${d ? '누르면 종목 창' : '스크리너 채점 대상이 아니에요'}">${atEsc(nm)}${star ? `<span class="at-star">${atStars(star)}</span>` : ''}${np ? `<span class="at-np">⭐${np}</span>` : ''}</button>`;
+    }
+    function atBindChips(root) {
+      root.querySelectorAll('.at-chip[data-code]').forEach(b => b.addEventListener('click', e => {
+        e.stopPropagation();
+        const d = allData.find(x => x.code === b.dataset.code);
+        if (d) openDetailModal(d);
+      }));
+    }
+    // 수급 탭용: 종목의 재료 칩 (최대 2개)
+    function atThemeTags(code) {
+      const I = atIndex(); const l = I && I.themes[code];
+      if (!l || !l.length) return '';
+      return l.slice(0, 2).map(x => `<span class="at-tag" title="${atEsc(x.why || '')}">${atEsc(x.t)}${x.star ? ' ' + atStars(x.star) : ''}</span>`).join('');
+    }
+    // 수급 탭 '많이 오른 종목': 오른 이유 (같은 날 이슈정리, 없으면 최근 3일)
+    function atReason(code, day) {
+      const I = atIndex(); const l = I && I.issues[code];
+      if (!l || !l.length) return '';
+      const x = l.find(v => v.d === day) || l.find(v => v.d && v.d >= atShift(day, -3));
+      return x ? atShort(x.why || x.sum, 70) : '';
+    }
+    // 긴 문장은 앞부분만, 전체는 마우스를 올리면
+    const atShort = (txt, n) => { const s = String(txt || ''); return s.length <= n ? atEsc(s) : `<span title="${atEsc(s)}">${atEsc(s.slice(0, n))}…</span>`; };
+    // 받침 있으면 '이에요', 없으면 '예요' (영문·숫자로 끝나면 '예요')
+    function atIeyo(w) { const c = String(w || '').trim().slice(-1).charCodeAt(0); return (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28) ? '이에요' : '예요'; }
+    function atShift(day, n) { const t = new Date(day + 'T00:00:00'); t.setDate(t.getDate() + n); return t.toISOString().slice(0, 10); }
+
+    // ── 🧩 재료 지도 ──
+    let themePeriod = 'd', themeSort = 'rt', themeQuery = '', themeOpen = null;
+    function renderThemesView() {
+      const el = document.getElementById('themes-view');
+      const A = window.AT_DATA;
+      if (!A) { el.innerHTML = '<div class="flow-card">에어테이블 자료(airtable_data.js)가 아직 없어요.</div>'; return; }
+      const P = { d: '오늘', w: '1주', m: '1달' };
+      // '많이 오른 순'은 관련주 3개 이상인 재료만 (1~2종목 재료는 한 종목 등락이 평균을 좌우한다). 작은 재료는 검색으로.
+      let list = Object.entries(A.themes).filter(([t, th]) => th.heat && th.heat[themePeriod] && (themeSort !== 'rt' || (th.heat[themePeriod].n || 0) >= 3));
+      if (themeQuery) list = Object.entries(A.themes).filter(([t]) => t.includes(themeQuery));
+      const sk = themeSort === 'rt' ? 'avg' : 'tv';
+      list.sort((a, b) => (((b[1].heat || {})[themePeriod] || {})[sk] ?? -1e9) - (((a[1].heat || {})[themePeriod] || {})[sk] ?? -1e9));
+      const hot = list[0];
+      const card = ([t, th], i) => {
+        const h = (th.heat || {})[themePeriod] || {};
+        const leaders = (h.top5 && h.top5.length ? h.top5.slice(0, 3) : (th.top3 || []).filter(Boolean));
+        const byName = Object.fromEntries(th.stocks.map(s => [s.nm, s]));
+        const open = themeOpen === t;
+        const rows = open ? th.stocks.map(s => {
+          const fd = window.FLOW_DATA && s.code && window.FLOW_DATA.stocks[s.code];
+          return `<tr>
+            <td class="l">${atChip(s.nm, s.code, s.star)}</td>
+            <td class="l">${fd ? flowBadge(fd.g) : '<span class="at-muted">수급 자료 없음</span>'}</td>
+            <td class="l at-why">${atShort(s.why, 110)}${s.d ? ` <span class="at-muted">(${s.d})</span>` : ''}</td>
+          </tr>`;
+        }).join('') : '';
+        return `<div class="at-tcard ${open ? 'open' : ''}">
+          <div class="at-thead" data-theme="${atEsc(t)}">
+            <span class="at-rank">${i + 1}</span>
+            <div class="at-tname"><b>${atEsc(t)}</b> ${th.cls ? `<span class="at-cls">${atEsc(th.cls)}</span>` : ''}</div>
+            <div class="at-tnum" title="관련주 ${h.n || '?'}개 등락률 합계 ${h.rt == null ? '-' : h.rt.toFixed(1) + '%'}"><span>관련주 평균 등락률</span><b class="${flowCls(h.avg)}">${h.avg == null ? '-' : (h.avg > 0 ? '+' : '') + h.avg.toFixed(2) + '%'}</b></div>
+            <div class="at-tnum"><span>거래대금 합계</span><b>${h.tv == null ? '-' : flowMoney(h.tv).replace('+', '')}</b></div>
+            <div class="at-lead">${leaders.map(nm => atChip(nm, (byName[nm] || {}).code, (byName[nm] || {}).star)).join('')}</div>
+            <span class="at-open">${open ? '접기 ▲' : `관련주 ${th.stocks.length}개 ▼`}</span>
+          </div>
+          ${open ? `<table class="at-table"><thead><tr><th class="l">종목 (★ 대장 · ⭐ 거장 통과)</th><th class="l">수급 데이터</th><th class="l">왜 이 재료인가</th></tr></thead><tbody>${rows}</tbody></table>` : ''}
+        </div>`;
+      };
+      el.innerHTML = `
+        <div class="flow-card">
+          <div class="flow-sub">🧩 재료 지도 · 에어테이블 '관련주 실제 주목도' ${((hot && hot[1].heat[themePeriod]) || {}).date || ''} 기준</div>
+          <div class="flow-headline">${hot ? `${P[themePeriod]} 가장 뜨거운 재료는 <b>${atEsc(hot[0])}</b>${atIeyo(hot[0])}.` : '해당 재료가 없어요.'}</div>
+          <div class="flow-sub" style="margin-top:6px;">재료를 누르면 관련주 전체와 각 종목의 거장 통과·수급 판정이 나와요. 종목 이름을 누르면 종목 창이 열려요.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-pick">
+            <div class="flow-pick-row"><span class="flow-pick-label">기간</span>${Object.entries(P).map(([k, v]) => `<button class="flow-chip ${themePeriod === k ? 'active' : ''}" data-tp="${k}">${v}</button>`).join('')}</div>
+            <div class="flow-pick-row"><span class="flow-pick-label">순서</span>
+              <button class="flow-chip ${themeSort === 'rt' ? 'active' : ''}" data-ts="rt">많이 오른 순</button>
+              <button class="flow-chip ${themeSort === 'tv' ? 'active' : ''}" data-ts="tv">거래 많은 순</button>
+              <input id="at-theme-q" class="at-search" placeholder="재료 이름 찾기 (예: 원전)" value="${atEsc(themeQuery)}">
+            </div>
+          </div>
+          <div class="at-tlist">${list.slice(0, themeQuery ? 60 : 40).map(card).join('') || '<div class="at-muted" style="padding:20px">해당 재료가 없어요.</div>'}</div>
+          <div class="flow-sub" style="margin-top:10px;">관련주 평균 등락률 = 에어테이블 '관련주 실제 주목도'의 등락률 합계 ÷ 관련주 수 (숫자에 마우스를 올리면 합계가 보여요). '많이 오른 순'은 관련주 3개 이상인 재료만 세워요. ★ 은 에어테이블 관련주 리스트의 대장 표시예요. 자료: 내 에어테이블, ${A.made} 받음.</div>
+        </div>`;
+      el.querySelectorAll('[data-tp]').forEach(b => b.onclick = () => { themePeriod = b.dataset.tp; themeOpen = null; renderThemesView(); });
+      el.querySelectorAll('[data-ts]').forEach(b => b.onclick = () => { themeSort = b.dataset.ts; renderThemesView(); });
+      const q = el.querySelector('#at-theme-q');
+      q.addEventListener('change', () => { themeQuery = q.value.trim(); themeOpen = null; renderThemesView(); });
+      el.querySelectorAll('.at-thead').forEach(h => h.addEventListener('click', e => {
+        if (e.target.closest('.at-chip')) return;
+        themeOpen = themeOpen === h.dataset.theme ? null : h.dataset.theme; renderThemesView();
+      }));
+      atBindChips(el);
+    }
+
+    // ── 📰 오늘의 재료 소식 ──
+    let newsTab = 'pre', newsOnlyMasters = false, newsOnlyWatch = false, newsQuery = '', newsLimit = 60;
+    function renderNewsView() {
+      const el = document.getElementById('news-view');
+      const A = window.AT_DATA;
+      if (!A) { el.innerHTML = '<div class="flow-card">에어테이블 자료(airtable_data.js)가 아직 없어요.</div>'; return; }
+      const TABS = [['pre', '🌅 장전 뉴스', A.pre.length], ['live', '📡 장중 뉴스', A.live.length], ['issue', '🚀 급등 이유', A.issues.length],
+                    ['report', '📑 리포트', A.reports.length], ['event', '📅 다가오는 일정', A.events.length]];
+      const watch = new Set(watchCodes());
+      const codesOf = x => x.code ? [x.code] : (x.stocks || []).map(s => s.code).filter(Boolean);
+      const okMaster = c => { const d = allData.find(v => v.code === c); return d && getPassedMasters(d).length >= 1; };
+      let items = { pre: A.pre, live: A.live, issue: A.issues, report: A.reports, event: A.events }[newsTab] || [];
+      if (newsOnlyMasters) items = items.filter(x => codesOf(x).some(okMaster));
+      if (newsOnlyWatch) items = items.filter(x => codesOf(x).some(c => watch.has(c)));
+      if (newsQuery) items = items.filter(x => JSON.stringify([x.title, x.theme, x.nm, x.sum, (x.stocks || []).map(s => s.nm)]).includes(newsQuery));
+      const today = new Date().toISOString().slice(0, 10);
+      const det = (label, txt) => txt ? `<details class="at-det"><summary>${label}</summary><div>${atEsc(txt)}</div></details>` : '';
+      const link = (x, t) => x.link ? `<a href="${atEsc(x.link)}" target="_blank" rel="noopener">${atEsc(t)}</a>` : atEsc(t);
+      const one = x => {
+        if (newsTab === 'pre') return `<div class="at-item">
+          <div class="at-meta">${atMd(x.d)} · ${atEsc(x.press || '')}${x.theme ? ` <span class="at-tag">${atEsc(x.theme)}</span>` : ''}</div>
+          <div class="at-title">${link(x, x.title)}</div>
+          <div class="at-chips">${x.stocks.map(s => atChip(s.nm, s.code, s.star)).join('')}</div>
+          ${det('3줄 요약', x.sum)}${det('오를 이유', x.up)}${det('내릴 걱정', x.down)}</div>`;
+        if (newsTab === 'live') return `<div class="at-item">
+          <div class="at-meta">${atMd(x.d)} · ${atEsc(x.press || '')}</div>
+          <div class="at-title">${link(x, x.title)}</div>${det('3줄 요약', x.sum)}</div>`;
+        if (newsTab === 'issue') return `<div class="at-item">
+          <div class="at-meta">${atMd(x.d)}${x.theme ? ` <span class="at-tag">${atEsc(x.theme)}</span>` : ''}</div>
+          <div class="at-title">${atChip(x.nm, x.code, 0)} <b class="${flowCls(x.rt)}">${x.rt == null ? '' : (x.rt > 0 ? '+' : '') + x.rt + '%'}</b> ${atShort(x.why || x.sum, 160)}</div>
+          ${x.title ? `<div class="at-meta">📰 ${link(x, x.title)} ${atEsc(x.press || '')}</div>` : ''}
+          ${det('재료가 이어질 이유', x.keep)}${det('재료가 꺼질 이유', x.fade)}</div>`;
+        if (newsTab === 'report') {
+          const d = x.code ? allData.find(v => v.code === x.code) : null;
+          return `<div class="at-item">
+          <div class="at-meta">${atMd(x.d)} · ${atEsc(x.broker || '')} · ${atEsc(x.kind || '')}</div>
+          <div class="at-title">${link(x, x.title)}</div>
+          ${x.code ? `<div class="at-chips">${atChip(d ? d.name : x.code, x.code, 0)}</div>` : ''}
+          ${det('요약 보기', x.sum)}</div>`;
+        }
+        const dd = x.d ? Math.round((new Date(x.d) - new Date(today)) / 86400000) : null;
+        return `<div class="at-item">
+          <div class="at-meta"><b>${atMd(x.d)}</b> ${dd == null ? '' : dd === 0 ? '<span class="at-tag">오늘</span>' : dd > 0 ? `<span class="at-tag">D-${dd}</span>` : '<span class="at-tag">지남</span>'}${x.theme ? ` <span class="at-tag">${atEsc(x.theme)}</span>` : ''}</div>
+          <div class="at-title">${link(x, x.title)}</div>
+          <div class="at-chips">${x.stocks.map(s => atChip(s.nm, s.code, s.star)).join('')}</div></div>`;
+      };
+      el.innerHTML = `
+        <div class="flow-card">
+          <div class="flow-sub">📰 오늘의 재료 소식 · 내 에어테이블 ${A.made} 받음</div>
+          <div class="flow-headline">뉴스·급등 이유·리포트·일정을 한곳에서 봐요.</div>
+          <div class="flow-sub" style="margin-top:6px;">종목 이름을 누르면 종목 창이 열려요. ⭐ 숫자는 통과한 거장 수, ★ 은 그 재료의 대장 표시예요.</div>
+        </div>
+        <div class="flow-card">
+          <div class="flow-pick">
+            <div class="flow-pick-row">${TABS.map(([k, t, n]) => `<button class="flow-chip ${newsTab === k ? 'active' : ''}" data-nt="${k}">${t} <span class="at-muted">${n}</span></button>`).join('')}</div>
+            <div class="flow-pick-row">
+              <label><input type="checkbox" id="at-only-m" ${newsOnlyMasters ? 'checked' : ''}> 거장 통과 종목 관련만</label>
+              <label><input type="checkbox" id="at-only-w" ${newsOnlyWatch ? 'checked' : ''}> 내 관심종목 관련만</label>
+              <input id="at-news-q" class="at-search" placeholder="낱말로 찾기 (예: LNG, 삼성SDI)" value="${atEsc(newsQuery)}">
+              <span class="at-muted">${items.length}건</span>
+            </div>
+          </div>
+          <div class="at-list">${items.slice(0, newsLimit).map(one).join('') || '<div class="at-muted" style="padding:20px">해당하는 소식이 없어요.</div>'}</div>
+          ${items.length > newsLimit ? '<button class="flow-chip" id="at-more" style="margin-top:10px">더 보기</button>' : ''}
+          <div class="flow-sub" style="margin-top:10px;">기사·리포트 요약은 내 에어테이블에 정리된 내용이에요. 원문은 제목을 눌러 보세요. 매수·매도 추천이 아닙니다.</div>
+        </div>`;
+      el.querySelectorAll('[data-nt]').forEach(b => b.onclick = () => { newsTab = b.dataset.nt; newsLimit = 60; renderNewsView(); });
+      el.querySelector('#at-only-m').onchange = e => { newsOnlyMasters = e.target.checked; renderNewsView(); };
+      el.querySelector('#at-only-w').onchange = e => { newsOnlyWatch = e.target.checked; renderNewsView(); };
+      const q = el.querySelector('#at-news-q'); q.addEventListener('change', () => { newsQuery = q.value.trim(); renderNewsView(); });
+      const more = el.querySelector('#at-more'); if (more) more.onclick = () => { newsLimit += 60; renderNewsView(); };
+      atBindChips(el);
+    }
+
+    // ── 종목 창: 재료·뉴스 칸 (맨 뒤 다섯 번째 칸) ──
+    function renderModalAT(code) {
+      const box = document.getElementById('m-at-box');
+      if (!box) return;
+      const I = atIndex();
+      if (!I) { box.innerHTML = ''; box.style.display = 'none'; return; }
+      const th = I.themes[code] || [], is = (I.issues[code] || []).slice(0, 4), rp = (I.reports[code] || []).slice(0, 4),
+            nw = (I.pre[code] || []).slice(0, 4), ev = (I.events[code] || []).filter(e => e.d >= new Date().toISOString().slice(0, 10)).slice(0, 4);
+      if (!th.length && !is.length && !rp.length && !nw.length && !ev.length) {
+        box.style.display = '';
+        box.innerHTML = '<h4 class="at-mh">🧩 재료·뉴스</h4><div class="at-muted">내 에어테이블에 이 종목 기록이 아직 없어요.</div>';
+        return;
+      }
+      const link = (x, t) => x.link ? `<a href="${atEsc(x.link)}" target="_blank" rel="noopener">${atEsc(t)}</a>` : atEsc(t);
+      const sec = (title, body) => body ? `<div class="at-msec"><div class="at-msub">${title}</div>${body}</div>` : '';
+      box.style.display = '';
+      box.innerHTML = `<h4 class="at-mh">🧩 재료·뉴스 <span class="at-muted">(내 에어테이블)</span></h4>
+        ${sec('묶여 있는 재료', th.map(x => `<div class="at-mrow"><span class="at-tag">${atEsc(x.t)}${x.star ? ' ' + atStars(x.star) : ''}</span> ${atShort(x.why, 150)}</div>`).join(''))}
+        ${sec('최근 급등 이유', is.map(x => `<div class="at-mrow"><b>${atMd(x.d)}</b> <b class="${flowCls(x.rt)}">${x.rt == null ? '' : (x.rt > 0 ? '+' : '') + x.rt + '%'}</b> ${atEsc(x.why || x.sum)}</div>`).join(''))}
+        ${sec('증권사 리포트', rp.map(x => `<details class="at-det"><summary><b>${atMd(x.d)}</b> ${atEsc(x.broker || '')} · ${atEsc(x.title)}</summary><div>${atEsc(x.sum)} ${x.link ? link(x, '원문 ↗') : ''}</div></details>`).join(''))}
+        ${sec('관련 장전 뉴스', nw.map(x => `<div class="at-mrow"><b>${atMd(x.d)}</b> ${link(x, x.title)}</div>`).join(''))}
+        ${sec('다가오는 일정', ev.map(x => `<div class="at-mrow"><b>${atMd(x.d)}</b> ${atEsc(x.title)}</div>`).join(''))}`;
     }
 
     function openDetailModal(d) {
@@ -4069,6 +4415,7 @@
         };
       }
       openPriceChart(d.code);
+      renderModalAT(d.code);
       
       const cagr = d.dps_cagr_3y;
       let cagrStr = '-';
