@@ -11,10 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <!-- Data Script (CORS 방지용 로컬 JS 로드) -->
-  <script src="screener_data.js?v=202610220756"></script>
-  <script src="cycle_data.js?v=202610220756"></script>
-  <script src="airtable_data.js?v=202610212329"></script>
-  <script src="flow_data.js?v=202610220756"></script>
+  <script src="screener_data.js?v=202610230755"></script>
+  <script src="cycle_data.js?v=202610230755"></script>
+  <script src="airtable_data.js?v=202610222054"></script>
+  <script src="flow_data.js?v=202610230755"></script>
 
   <style>
     :root {
@@ -1055,9 +1055,17 @@
     .flow-mkt-three b { font-size: 17px; }
     .flow-tools { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 16px; font-size: 14px; color: var(--text-secondary); }
     #flow-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
-    #flow-table th { background: #1B2230; color: #94A3B8; font-size: 13px; font-weight: 700; padding: 10px 12px; text-align: right; white-space: nowrap; }
+    #flow-table th { background: #1B2230; color: #94A3B8; font-size: 13px; font-weight: 700; padding: 8px 8px; text-align: right; white-space: nowrap; }
+    #flow-table th.grp { text-align: center; color: #E2E8F0; border-bottom: 1px solid var(--border-subtle); }
     #flow-table th.l, #flow-table td.l { text-align: left; }
-    #flow-table td { padding: 12px; border-bottom: 1px solid var(--border-subtle); text-align: right; white-space: nowrap; vertical-align: top; }
+    #flow-table td.l { white-space: normal; }
+    #flow-table td.flow-nm { min-width: 110px; max-width: 170px; }
+    #flow-table td.flow-nm .flow-name { white-space: nowrap; }
+    #flow-table td.flow-tags { max-width: 140px; }
+    #flow-table td.at-why { min-width: 140px; }
+    #flow-table td.flow-g { max-width: 130px; }
+    #flow-table td.flow-g .flow-badge { white-space: normal; word-break: keep-all; display: inline-block; line-height: 1.35; }
+    #flow-table td { padding: 10px 8px; border-bottom: 1px solid var(--border-subtle); text-align: right; white-space: nowrap; vertical-align: top; }
     #flow-table td.flow-why { white-space: normal; color: var(--text-secondary); font-size: 14px; line-height: 1.5; min-width: 260px; }
     #flow-table tr:hover td { background: var(--bg-surface-hover); cursor: pointer; }
     .flow-rank { color: var(--text-muted); }
@@ -1068,6 +1076,7 @@
     #flow-table th small { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 2px; }
     #flow-table td.flow-num { color: var(--text-secondary); }
     #flow-table td.flow-num.on { color: #10B981; font-weight: 800; }
+    #flow-table td.flow-num.neg { color: #60A5FA; }
     .flow-how summary { font-size: 15px; font-weight: 800; cursor: pointer; }
     .flow-how p, .flow-how ol { font-size: 14px; line-height: 1.7; margin-top: 10px; color: var(--text-secondary); }
     .flow-how ol { padding-left: 20px; }
@@ -4028,14 +4037,31 @@
     const flowBadge = g => { const x = FLOW_GRADES[g] || FLOW_GRADES['보통']; return `<span class="flow-badge" style="background:${x.c}1F; color:${x.c}; border:1px solid ${x.c}55;">${x.n}</span>`; };
     // 4가지 체크 (통과 ✓ 초록, 아니면 회색)
     // 수급 데이터 4개 항목을 각각 칸으로 (통과하면 초록 ✓)
-    function flowCells(s) {
-      const c = s.chk || [];
-      const cell = (ok, txt) => `<td class="flow-num ${ok ? 'on' : ''}">${ok ? '✓ ' : ''}${txt}</td>`;
-      const top = Math.max(1, 100 - s.p20);
-      return cell(c[0], `${s.r20 > 0 ? '+' : ''}${s.r20}%`)
-        + cell(c[1], s.p20 >= 50 ? `상위 ${top}%` : `하위 ${Math.max(1, s.p20)}%`)
-        + cell(c[2], `${s.pos}일`)
-        + cell(c[3], `${s.lead20}%`);
+    // P: '20' = 1달(판정 기준, ✓ 표시) · '5' = 1주 · '1' = 오늘 (오늘·1주는 숫자만, ✓ 없음). 마이너스(순매도)는 파란색.
+    // who: 'together' = 셋 합친 숫자(✓ 는 이때만) · 'foreign' / 'pension' = 그 주체 숫자 (s.by 에 있음)
+    function flowCells(s0, P = '20', who = 'together') {
+      const s = who === 'together' ? s0 : ((s0.by || {})[who] || {});
+      const c = P === '20' && who === 'together' ? (s0.chk || []) : [];
+      const pct = v => v == null ? '-' : `${v > 0 ? '+' : ''}${v}%`;
+      const rank = v => v == null ? '-' : (v >= 50 ? `상위 ${Math.max(1, 100 - v)}%` : `하위 ${Math.max(1, v)}%`);
+      const cell = (ok, val, txt) => `<td class="flow-num ${ok ? 'on' : ''} ${val != null && val < 0 ? 'neg' : ''}">${ok ? '✓ ' : ''}${txt}</td>`;
+      if (P === '1') return cell(0, s.d1, pct(s.d1)) + cell(0, null, rank(s.p1)) + cell(0, null, '-') + cell(0, s.lead1, pct(s.lead1));
+      if (P === '5') return cell(0, s.r5, pct(s.r5)) + cell(0, null, rank(s.p5)) + cell(0, null, s.pos5 == null ? '-' : `${s.pos5}일`) + cell(0, s.lead5, pct(s.lead5));
+      return cell(c[0], s.r20, pct(s.r20)) + cell(c[1], null, rank(s.p20)) + cell(c[2], null, s.pos == null ? '-' : `${s.pos}일`) + cell(c[3], s.lead20, pct(s.lead20));
+    }
+    // 네 칸 머리: 고른 기간을 같이 적는다
+    function flowHead(P, who = 'together') {
+      const L = { '1': ['오늘', '최근 3개월 하루 기록 중', '-', '오늘 거래대금 중'],
+                  '5': ['1주', '최근 4개월 1주 기록 중', '5일 중', '1주 거래대금 중'],
+                  '20': ['1달', '최근 4개월 1달 기록 중', '20일 중', '1달 거래대금 중'] }[P];
+      const ck = P === '20' && who === 'together';
+      const R = { '1': '하루', '5': '1주', '20': '1달' }[P];
+      const W = { together: '큰 돈(외국인·연기금·투신)', foreign: '외국인', pension: '연기금·투신' }[who];
+      const wl = { together: '셋 다', foreign: '외국인', pension: '연기금·투신' }[who];
+      return `<th title="${W} 순매수 ÷ 시장에 도는 주식의 시가총액. 마이너스는 순매도${ck ? '. 1% 이상(시총 10조↑는 0.5%)이면 ✓' : ''}">매수 규모<small>유통주식 대비</small></th>`
+        + `<th title="이 기간 순매수가 이 종목의 과거 기록 중 어디쯤인가${ck ? '. 상위 10% 안이면 ✓' : ''}">평소 대비<small>과거 ${R} 기록 중</small></th>`
+        + `<th title="이 기간 중 ${W}이(가) 순매수한 날 수${ck ? '. 12일 이상이면 ✓' : ''}">매수 일수<small>${L[2]}</small></th>`
+        + `<th title="이 기간 거래대금 중 ${W} 순매수가 차지한 몫. 마이너스는 순매도${ck ? '. 5% 이상이면 ✓' : ''}">거래 비중<small>거래대금 중</small></th>`;
     }
     // 판정 → 한 줄 설명 (사람 말로)
     function flowWhy(s) {
@@ -4091,6 +4117,8 @@
           : big > 0 && ki.ind < 0 ? `개인이 <b>${flowMoney(-ki.ind).replace('+', '')}</b> 팔고, 외국인·기관이 <b>${flowMoney(big).replace('+', '')}</b> 샀어요.`
           : `외국인 ${flowMoney(ki.frg)}, 기관 ${flowMoney(ki.org)}, 개인 ${flowMoney(ki.ind)}.`);
       const P = flowPeriod;
+      const P4 = flowOther ? '20' : P;
+      const W4 = flowOther ? 'together' : flowWho;   // 네 칸이 보여 줄 돈의 주인 (다른 목록은 늘 셋 다)    // 네 칸이 보여 줄 기간 (다른 목록은 늘 1달)
       const pm = P === '1' ? F.market : (F.periods && F.periods[P]) || {};
       const pLabel = FLOW_PERIOD.find(x => x.k === P).t;
       const mkBox = (nm, m, idx) => !m ? '' : `
@@ -4104,7 +4132,8 @@
         </div>`;
       let codes = flowCodes().filter(c => F.stocks[c]);
       if (flowMasterOnly) codes = codes.filter(c => { const d = allData.find(x => x.code === c); return d && getPassedMasters(d).length >= 1; });
-      const amtLabel = flowOther ? '외국인+연기금·투신 (오늘)' : `${FLOW_WHO.find(x => x.k === flowWho).t.replace(' 산 종목', '')} 순매수 (${pLabel})`;
+      const amtLabel = flowOther ? '순매수<small>셋 다 · 오늘</small>' : `순매수<small>${FLOW_WHO.find(x => x.k === flowWho).t.replace(' 산 종목', '')} · ${pLabel}</small>`;
+      const grpLabel = `${{ together: '셋 다', foreign: '외국인', pension: '연기금·투신' }[W4]} · ${{ '1': '오늘', '5': '1주', '20': '1달' }[P4]} 숫자`;
       const rows = codes.map((c, i) => {
         const s = F.stocks[c];
         const d = allData.find(x => x.code === c);
@@ -4113,13 +4142,13 @@
         const warn = flowWarn(s);
         return `<tr data-code="${c}">
           <td class="flow-rank">${i + 1}</td>
-          <td class="l"><div class="flow-name">${flowEsc(s.nm)}${np ? ` <span class="flow-star" title="거장 ${np}명 통과">⭐${np}</span>` : ''}</div>${warn.length ? `<div class="flow-flag">⚠ ${warn.join(' · ')}</div>` : ''}</td>
-          <td class="l">${atThemeTags(c) || '<span class="at-muted">-</span>'}</td>
+          <td class="l flow-nm"><div class="flow-name">${flowEsc(s.nm)}${np ? ` <span class="flow-star" title="거장 ${np}명 통과">⭐${np}</span>` : ''}</div>${warn.length ? `<div class="flow-flag">⚠ ${warn.join(' · ')}</div>` : ''}</td>
+          <td class="l flow-tags">${atThemeTags(c) || '<span class="at-muted">-</span>'}</td>
           <td class="${flowCls(s.rt)}">${s.rt == null ? '-' : (s.rt > 0 ? '+' : '') + s.rt.toFixed(1) + '%'}</td>
           ${flowOther === 'up' ? `<td class="l at-why">${atReason(c, F.date) || '<span class="at-muted">이슈정리 기록 없음</span>'}</td>` : ''}
           <td class="${flowCls(amt)}"><b>${flowMoney(amt)}</b></td>
-          <td class="l" title="${flowEsc(flowWhy(s))}">${flowBadge(s.g)}</td>
-          ${flowCells(s)}
+          <td class="l flow-g" title="${flowEsc(flowWhy(s))}">${flowBadge(s.g)}</td>
+          ${flowCells(s, P4, W4)}
         </tr>`;
       }).join('');
       const chip = (on, attr, val, txt) => `<button class="flow-chip ${on ? 'active' : ''}" ${attr}="${val}">${txt}</button>`;
@@ -4147,10 +4176,12 @@
           <div class="flow-tools">
             <label><input type="checkbox" id="flow-master-only" ${flowMasterOnly ? 'checked' : ''}> 거장 통과 종목만 보기</label>
             <span>${codes.length}개 · 종목을 누르면 자세히 볼 수 있어요</span>
+            ${P4 !== '20' || W4 !== 'together' ? '<span class="at-muted">초록 ✓ 와 수급 데이터 판정은 셋 합친 1달 기준이라, 이 화면 네 칸은 숫자만 보여요</span>' : ''}
+            ${F.quick && flowOther === 'masters' ? `<span class="flow-pill">거장 통과 종목은 ${F.masters_asof || '이전'} ${F.masters_final === false ? '잠정' : '확정'} 기준 (오늘 확정 판정은 20:20 이후)</span>` : ''}
           </div>
           <div style="overflow-x:auto;">
             <table id="flow-table">
-              <thead><tr><th>#</th><th class="l">종목</th><th class="l" title="내 에어테이블의 재료(테마), ★ 은 대장 표시">재료</th><th>오늘</th>${flowOther === 'up' ? '<th class="l" title="내 에어테이블 이슈정리의 상승 사유">오른 이유</th>' : ''}<th>${amtLabel}</th><th class="l" title="외국인·연기금·투신을 합친 최근 한 달(20거래일) 기준">수급 데이터</th><th title="한 달 동안 큰 돈(외국인·연기금·투신)이 산 금액 ÷ 시장에 도는 주식의 시가총액. 1% 이상(시총 10조↑는 0.5%)이면 ✓">매수 규모<small>유통주식 대비</small></th><th title="이번 한 달 매수액이 이 종목의 최근 4개월 기록 중 어디쯤인가. 상위 10% 안이면 ✓">평소 대비<small>최근 4개월 중</small></th><th title="최근 20거래일 중 큰 돈이 순매수한 날 수. 12일 이상이면 ✓">매수 일수<small>20일 중</small></th><th title="한 달 거래대금 중 큰 돈의 순매수가 차지한 몫. 5% 이상이면 ✓">거래 비중<small>거래대금 중</small></th></tr></thead>
+              <thead><tr><th rowspan="2">#</th><th rowspan="2" class="l">종목</th><th rowspan="2" class="l" title="내 에어테이블의 재료(테마), ★ 은 대장 표시">재료</th><th rowspan="2">오늘</th>${flowOther === 'up' ? '<th rowspan="2" class="l" title="내 에어테이블 이슈정리의 상승 사유">오른 이유</th>' : ''}<th rowspan="2">${amtLabel}</th><th rowspan="2" class="l" title="외국인·연기금·투신을 합친 최근 한 달(20거래일) 기준">수급 데이터<small>셋 다 · 1달</small></th><th colspan="4" class="grp">${grpLabel}</th></tr><tr>${flowHead(P4, W4)}</tr></thead>
               <tbody>${rows || '<tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:24px;">해당하는 종목이 없어요.</td></tr>'}</tbody>
             </table>
           </div>
