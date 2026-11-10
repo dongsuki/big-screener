@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-11-10 07:38
-window.CYCLE_UPDATED = "2026-11-10 07:30";
+// 생성 시각: 2026-11-11 07:48
+window.CYCLE_UPDATED = "2026-11-11 07:30";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
@@ -1914,10 +1914,10 @@ window.CYCLE_DATA = {
     },
     {
      "name": "3대 가격 차이",
-     "value": "HH 2.63 · TTF 27.09 · JKM 31.49 ($/MMBtu) · JKM−TTF +4.40 · TTF−HH +24.46",
-     "as_of": "2026-11-09",
+     "value": "HH 2.63 · TTF 27.81 · JKM 31.34 ($/MMBtu) · JKM−TTF +3.54 · TTF−HH +25.18",
+     "as_of": "2026-11-10",
      "auto": true,
-     "signal": "JKM 이 TTF 보다 비싸요 → LNG 화물이 아시아로. 미국 대비 차이 +24.5달러 → 미국 LNG 수출 수익성 큼",
+     "signal": "JKM 이 TTF 보다 비싸요 → LNG 화물이 아시아로. 미국 대비 차이 +25.2달러 → 미국 LNG 수출 수익성 큼",
      "when": "매일 · JKM, TTF, HH (HH 는 EIA 현물가, TTF·JKM 은 선물 종가)",
      "how": "JKM−TTF 가 크면 화물이 아시아로, HH 와의 차이가 크면 미국 LNG 수익성 확대",
      "link": "https://www.eia.gov/dnav/ng/hist/rngwhhdd.htm"
