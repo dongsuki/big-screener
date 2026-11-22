@@ -1,6 +1,6 @@
 // 사이클 레이더 데이터 — build_cycle_data.py 가 자동 생성합니다. 직접 고치지 마세요.
-// 생성 시각: 2026-11-22 07:39
-window.CYCLE_UPDATED = "2026-11-22 07:30";
+// 생성 시각: 2026-11-23 07:38
+window.CYCLE_UPDATED = "2026-11-23 07:30";
 window.CYCLE_DATA = {
  "semiconductor": {
   "id": "semiconductor",
@@ -1918,7 +1918,7 @@ window.CYCLE_DATA = {
     },
     {
      "name": "3대 가격 차이",
-     "value": "HH 3.10 · TTF 28.44 · JKM 28.41 ($/MMBtu) · JKM−TTF -0.02 · TTF−HH +25.34",
+     "value": "HH 3.10 · TTF 28.44 · JKM 28.41 ($/MMBtu) · JKM−TTF -0.03 · TTF−HH +25.34",
      "as_of": "2026-11-20",
      "auto": true,
      "signal": "아시아·유럽 값이 비슷해요. 미국 대비 차이 +25.3달러 → 미국 LNG 수출 수익성 큼",
